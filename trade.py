@@ -58,10 +58,6 @@ else:
   START_INDEX_TIME_DELTA = datetime.timedelta(days = 2, hours = 7) #Zone compare
   TIME_PROTECT_DELTA = datetime.timedelta(days = 1, hours = 7, seconds = 10) # Add 10s to prevent missing data for 1 day interval 
   TIME_INTERVAL_STR = '1d'
-  # Dump print to log file
-  OLD_STDOUT = sys.stdout
-  LOG_FILE = open(CACHE_PATH + "/trade.log","a")
-  sys.stdout = LOG_FILE
   # configure exchange
   exchange = ccxt.binance({
   'timeout': 10000,
@@ -70,6 +66,10 @@ else:
   
 if SERVER_MODE == 0:
   TIME_UTC_DELTA = datetime.timedelta(hours = 0)
+  # Dump print to log file
+  OLD_STDOUT = sys.stdout
+  LOG_FILE = open(CACHE_PATH + "/trade.log","a")
+  sys.stdout = LOG_FILE
 else:
   TIME_UTC_DELTA = datetime.timedelta(hours = 7)
 

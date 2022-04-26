@@ -26,11 +26,6 @@ if not isExist:
   # Create a new directory because it does not exist 
   os.makedirs(CACHE_PATH)
 
-# Dump print to log file
-old_stdout = sys.stdout
-LOG_FILE = open(CACHE_PATH + "/trade_stock.log","a")
-sys.stdout = LOG_FILE
-
 SERVER_MODE = 1
 MODE = "VND" # VND/SSI/TCB #Reserved for future dev
 TELEGRAM_API_ID = "5030826661:AAH-C7ZGJexK3SkXIqM8CyDgieoR6ZFnXq8"
@@ -46,6 +41,10 @@ TIME_PROTECT_DELTA = datetime.timedelta(hours = 15, minutes= 10) # Add 15 hours 
 
 if SERVER_MODE == 0:
   TIME_UTC_DELTA = datetime.timedelta(hours = 0)
+  # Dump print to log file
+  old_stdout = sys.stdout
+  LOG_FILE = open(CACHE_PATH + "/trade_stock.log","a")
+  sys.stdout = LOG_FILE
 else:
   TIME_UTC_DELTA = datetime.timedelta(hours = 7)
 
@@ -522,15 +521,17 @@ if __name__ == "__main__":
     # Run first time if needed
     schedule_analysis_stock()
 
-    # Program ended, turn off sys log file mode
-    sys.stdout = old_stdout
-    LOG_FILE.close()
+    if SERVER_MODE == 0:
+      # Program ended, turn off sys log file mode
+      sys.stdout = old_stdout
+      LOG_FILE.close()
 
   except Exception as ex:
     print("Program Exception: Is it related Telegram?", ex)
-    # Program ended, turn off sys log file mode
-    sys.stdout = old_stdout
-    LOG_FILE.close()
+    if SERVER_MODE == 0:
+      # Program ended, turn off sys log file mode
+      sys.stdout = old_stdout
+      LOG_FILE.close()
 
   # Windows sleep this task so using Window Task Schedule
   # scheduler.add_job(schedule_analysis_stock, 'cron', day_of_week="mon-fri", hour="15", minute="30", timezone=TIME_ZONE, misfire_grace_time=None)  # run on Monday to Friday at 15h30

@@ -7,9 +7,6 @@ import telegram
 # Scheduler
 # from apscheduler.schedulers.blocking import BlockingScheduler
 # from pytz import utc,timezone
-# Investpy
-import investpy
-#import asyncio
 import requests
 from user import USER_AGENTS
 from pandas import json_normalize
@@ -34,7 +31,8 @@ old_stdout = sys.stdout
 LOG_FILE = open(CACHE_PATH + "/trade_stock.log","a")
 sys.stdout = LOG_FILE
 
-MODE = "VND" # VND/SSI/TCB OR INVESTPY
+SERVER_MODE = 1
+MODE = "VND" # VND/SSI/TCB #Reserved for future dev
 TELEGRAM_API_ID = "5030826661:AAH-C7ZGJexK3SkXIqM8CyDgieoR6ZFnXq8"
 TELEGRAM_CHANNEL_ID = "@botmuabanchungkhoan"
 # TIME_ZONE = timezone("Asia/Ho_Chi_Minh")
@@ -45,6 +43,11 @@ START_TRADE_TIME_ORIGINAL = datetime.datetime.strptime("2022-04-01",'%Y-%m-%d') 
 TIME_INTERVAL_DELTA = datetime.timedelta(days = 1) # Write next time search
 TIME_DURATION_DELTA = datetime.timedelta(days = 366)
 TIME_PROTECT_DELTA = datetime.timedelta(hours = 15, minutes= 10) # Add 15 hours 10 minutes to prevent missing data for 1 day interval 
+
+if SERVER_MODE == 0:
+  TIME_UTC_DELTA = datetime.timedelta(hours = 0)
+else:
+  TIME_UTC_DELTA = datetime.timedelta(hours = 7)
 
 #Start trade cannot be Sunday, Saturday
 if START_TRADE_TIME_ORIGINAL.weekday() == 5:
@@ -145,16 +148,11 @@ def getStockHistoryV2(code,start_date,end_date):
 def convert_timestamp_to_date(timeStampStr):
   return datetime.datetime.fromtimestamp(int(timeStampStr))
 
-if MODE == "VND":
-  def convert_to_datetime(stockData):
-    return datetime.datetime.strptime(stockData["timestamp"],'%Y-%m-%d')
-  def convert_date_to_string(dateTime):
-    return dateTime.strftime('%Y-%m-%d')
-elif MODE == "INVESTPY":
-  def convert_to_datetime(stockData):
-    return stockData.name
-  def convert_date_to_string(dateTime):
-    return dateTime.strftime('%d/%m/%Y')
+def convert_to_datetime(stockData):
+  return datetime.datetime.strptime(stockData["timestamp"],'%Y-%m-%d')
+
+def convert_date_to_string(dateTime):
+  return dateTime.strftime('%Y-%m-%d')
 
 def send_message_telegram(message):
   try:
@@ -177,16 +175,27 @@ def read_stock_list():
   return stockList
 
 # Read/Write format: %d-%m-%Y
-def read_next_time_stamp():
-  try:
-    with open(NEXT_TIME_FILE, "r") as file:
-        return datetime.datetime.strptime(file.read(),'%d-%m-%Y')
-  except IOError:
-    return START_TRADE_TIME
+if SERVER_MODE == 0:
+  def read_next_time_stamp():
+    try:
+      with open(NEXT_TIME_FILE, "r") as file:
+          return datetime.datetime.strptime(file.read(),'%d-%m-%Y')
+    except IOError:
+      return START_TRADE_TIME
 
-def write_next_time_stamp(nextTimeStamp):
-  with open(NEXT_TIME_FILE, "w+") as file:
-    file.write(nextTimeStamp.strftime('%d-%m-%Y'))
+  def write_next_time_stamp(nextTimeStamp):
+    with open(NEXT_TIME_FILE, "w+") as file:
+      file.write(nextTimeStamp.strftime('%d-%m-%Y'))
+else:
+  def read_next_time_stamp():
+    try:
+      nextTimeStamp = os.environ['NEXT_TIME_STAMP_STOCK']
+      return datetime.datetime.strptime(nextTimeStamp,'%d-%m-%Y')
+    except KeyError:
+      return START_TRADE_TIME
+
+  def write_next_time_stamp(nextTimeStamp):
+    os.environ['NEXT_TIME_STAMP_STOCK'] = nextTimeStamp.strftime('%d-%m-%Y')
 
 class Trade:
   def __init__(self, stockName, currentTime, nextTimeStamp):
@@ -228,33 +237,24 @@ class Trade:
     self.caculate_start_index()
     self.get_stock_indicators()
 
-  if MODE == "VND":
-    def verify_stock_data(self): # Check getting from VN Direct
-      MAXIMUM_RETRY = 5 # Retry maxium 5 times if getting data failure
-      retryCount = 0
-      while(retryCount < MAXIMUM_RETRY): 
-        stockData = getStockHistory(self.stockName, convert_date_to_string(self.currentTime-TIME_DURATION_DELTA), 
-                                    convert_date_to_string(self.currentTime))
-        if any("close" in s for s in stockData):
-          break
-        else: # not stockData
-          print("Request stock data empty count:", retryCount)
-          retryCount += 1
-          time.sleep(1)
+  def verify_stock_data(self): # Check getting from VN Direct
+    MAXIMUM_RETRY = 5 # Retry maxium 5 times if getting data failure
+    retryCount = 0
+    while(retryCount < MAXIMUM_RETRY): 
+      stockData = getStockHistory(self.stockName, convert_date_to_string(self.currentTime-TIME_DURATION_DELTA), 
+                                  convert_date_to_string(self.currentTime))
+      if any("close" in s for s in stockData):
+        break
+      else: # not stockData
+        print("Request stock data empty count:", retryCount)
+        retryCount += 1
+        time.sleep(1)
 
-        if (retryCount == MAXIMUM_RETRY):
-          raise Exception("Getting stock data: " + self.stockName + " failure")
-      self.stockData = stockData
-      self.dataLength = len(stockData)
-  elif MODE == "INVESTPY":
-    def verify_stock_data(self): # Check getting from Investpy
-      stockData = investpy.get_stock_historical_data(stock=self.stockName, country='VietNam',
-        from_date=convert_date_to_string(self.currentTime-TIME_DURATION_DELTA), to_date=convert_date_to_string(self.currentTime))
-      stockData.drop('Currency', axis=1, inplace=True)
-      stockData.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'}, inplace=True)
-      # df.index.name = 'timestamp'
-      self.stockData = stockData
-      self.dataLength = len(stockData)
+      if (retryCount == MAXIMUM_RETRY):
+        print(stockData)
+        raise Exception("Getting stock data: " + self.stockName + " failure")
+    self.stockData = stockData
+    self.dataLength = len(stockData)
 
   def caculate_start_index(self):
     for index in range (1, (self.dataLength)):
@@ -298,8 +298,6 @@ class Trade:
         self.buyPrice = self.close[i]
         self.hold = 1
         self.stoplossPrice = self.buyPrice - self.atr[i] # Stoploss based ATR(10)
-        if self.ma5[i] < self.ma10[i]: #Downtrend warning
-          self.commands.append(12)
         # if (self.atr[i] > 0.085*self.buyPrice): # Stoploss should start from 8.5%
         #   self.stoplossPrice = self.buyPrice - self.atr[i]
         # else:
@@ -310,7 +308,7 @@ class Trade:
         self.hold = 0
         self.stoplossPrice = 0
         if self.ma5[i] > self.ma10[i]: #Uptrend warning
-          self.commands.append(13)
+          self.commands.append(12)
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
@@ -364,7 +362,7 @@ class Trade:
               self.commands.append(10)
               break
 
-        if self.ma5[i] < self.ma10[i] and self.ma5[i - 1] >= self.ma10[i - 1]:
+        if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
 
       if (self.nextTimeStamp - TIME_INTERVAL_DELTA) < convert_to_datetime(self.stockData.iloc[i]):
@@ -419,10 +417,8 @@ class Trade:
           message += "\n" + " - Near the support/resistance zone"
         case 11:
           profit_report = 1
-          message += "\n" + " - MA10 cross MA5 check balance"
+          message += "\n" + " - MA5 below MA10 warning"
         case 12:
-          message += "\n" + " - MA5 below MA10 warning risk buy"
-        case 13:
           message += "\n" + " - MA5 above MA10 possible to hold"
     
     if (stoploss_setting == 1):
@@ -488,7 +484,7 @@ class Trade:
     return volumePeaks
 
 def schedule_analysis_stock():
-  currentTime = datetime.datetime.now()
+  currentTime = datetime.datetime.now()+ TIME_UTC_DELTA
   print("------ Day:", currentTime, "------")
   stockList = read_stock_list()
   # Read nextTimeStamp from file otherwise default: START_TRADE_TIME

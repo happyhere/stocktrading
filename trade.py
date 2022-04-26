@@ -24,6 +24,7 @@ if not isExist:
   # Create a new directory because it does not exist 
   os.makedirs(CACHE_PATH)
 
+SERVER_MODE = 1
 TELEGRAM_API_ID = "5249469985:AAF6_SyVBvigBM-s3EyghW63l64_CCbaIzw"
 TELEGRAM_CHANNEL_ID = "@bottradecryptocoin"
 STOCK_FILE = DIR_PATH+"/Database/ToTheMars.tls"
@@ -66,6 +67,11 @@ else:
   'timeout': 10000,
   'enableRateLimit': True
   })
+  
+if SERVER_MODE == 0:
+  TIME_UTC_DELTA = datetime.timedelta(hours = 0)
+else:
+  TIME_UTC_DELTA = datetime.timedelta(hours = 7)
 
 # # load markets and all coin_pairs
 # coin_pairs = exchange.symbols
@@ -101,16 +107,28 @@ def read_stock_list():
   # print(stockList)
   return stockList
 
-def read_next_time_stamp():
-  try:
-    with open(NEXT_TIME_FILE, "r") as file:
-        return datetime.datetime.strptime(file.read(),'%d-%m-%Y %H:%M:%S')
-  except IOError:
-    return START_TRADE_TIME
+# Read/Write format: %d-%m-%Y %H:%M:%S
+if SERVER_MODE == 0:
+  def read_next_time_stamp():
+    try:
+      with open(NEXT_TIME_FILE, "r") as file:
+          return datetime.datetime.strptime(file.read(),'%d-%m-%Y %H:%M:%S')
+    except IOError:
+      return START_TRADE_TIME
 
-def write_next_time_stamp(nextTimeStamp):
-  with open(NEXT_TIME_FILE, "w+") as file:
-    file.write(nextTimeStamp.strftime('%d-%m-%Y %H:%M:%S'))
+  def write_next_time_stamp(nextTimeStamp):
+    with open(NEXT_TIME_FILE, "w+") as file:
+      file.write(nextTimeStamp.strftime('%d-%m-%Y %H:%M:%S'))
+else:
+  def read_next_time_stamp():
+    try:
+      nextTimeStamp = os.environ['NEXT_TIME_STAMP']
+      return datetime.datetime.strptime(nextTimeStamp,'%d-%m-%Y %H:%M:%S')
+    except KeyError:
+      return START_TRADE_TIME
+
+  def write_next_time_stamp(nextTimeStamp):
+    os.environ['NEXT_TIME_STAMP'] = nextTimeStamp.strftime('%d-%m-%Y %H:%M:%S')
 
 class Trade:
   def __init__(self, stockName, currentTime, nextTimeStamp, timeFrame='1d'):
@@ -208,8 +226,6 @@ class Trade:
         self.buyPrice = self.close[i]
         self.hold = 1
         self.stoplossPrice = self.buyPrice - self.atr[i] # Stoploss based ATR(10)
-        if self.ma5[i] < self.ma10[i]: #Downtrend warning
-          self.commands.append(12)
         # if (self.atr[i] > 0.085*self.buyPrice): # Stoploss should start from 8.5%
         #   self.stoplossPrice = self.buyPrice - self.atr[i]
         # else:
@@ -220,7 +236,7 @@ class Trade:
         self.hold = 0
         self.stoplossPrice = 0
         if self.ma5[i] > self.ma10[i]: #Uptrend warning
-          self.commands.append(13)
+          self.commands.append(12)
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
@@ -275,7 +291,7 @@ class Trade:
                 self.commands.append(10)
                 break
 
-        if self.ma5[i] < self.ma10[i] and self.ma5[i - 1] >= self.ma10[i - 1]:
+        if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
 
       if (self.nextTimeStamp - START_INDEX_TIME_DELTA) < convert_string_to_date(self.stockData.iloc[i]["timestamp"]):
@@ -337,10 +353,8 @@ class Trade:
             message += "\n" + " - Near the support/resistance zone"
         case 11:
           profit_report = 1
-          message += "\n" + " - MA10 cross MA5 check balance"
+          message += "\n" + " - MA5 below MA10 warning"
         case 12:
-          message += "\n" + " - MA5 below MA10 warning risk buy"
-        case 13:
           message += "\n" + " - MA5 above MA10 possible to hold"
     
     if (stoploss_setting == 1):
@@ -485,7 +499,7 @@ class Trade:
     return volumePeaks
 
 def schedule_analysis_stock():
-  currentTime = datetime.datetime.now()
+  currentTime = datetime.datetime.now()+ TIME_UTC_DELTA
   print("------ Day:", currentTime, "------")
   stockList = read_stock_list()
   # Read nextTimeStamp from file otherwise default: START_TRADE_TIME

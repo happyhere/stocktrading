@@ -192,7 +192,11 @@ else:
       nextTimeStamp = os.environ['NEXT_TIME_STAMP_STOCK']
       return datetime.datetime.strptime(nextTimeStamp,'%d-%m-%Y')
     except KeyError:
-      return START_TRADE_TIME
+      try:
+        with open(NEXT_TIME_FILE, "r") as file:
+            return datetime.datetime.strptime(file.read(),'%d-%m-%Y')
+      except IOError:
+        return START_TRADE_TIME
 
   def write_next_time_stamp(nextTimeStamp):
     os.environ['NEXT_TIME_STAMP_STOCK'] = nextTimeStamp.strftime('%d-%m-%Y')

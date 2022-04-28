@@ -15,6 +15,7 @@ from talib import abstract
 import plotly.graph_objects as go
 from scipy import stats, signal
 import numpy as np
+import argparse
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 CACHE_PATH = DIR_PATH+'/cache'
@@ -24,13 +25,22 @@ if not isExist:
   # Create a new directory because it does not exist 
   os.makedirs(CACHE_PATH)
 
-SERVER_MODE = 1
+parser = argparse.ArgumentParser()
+parser.add_argument("-sb", "--sandbox", help="Sandbox mode to test trading BTC statistics "
+                                             "by default program will run in normal mode ",
+                    action="store_true", default=False)
+parser.add_argument("-s", "--server-mode", help="Run program in server like pythonanywhere/heroku "
+                                                "by default program will run in local machine",
+                    action="store_true", default=False)
+args = parser.parse_args()
+
+SERVER_MODE = args.server_mode
+SAND_BOX_MODE = args.sandbox
 TELEGRAM_API_ID = "5249469985:AAF6_SyVBvigBM-s3EyghW63l64_CCbaIzw"
 TELEGRAM_CHANNEL_ID = "@bottradecryptocoin"
 STOCK_FILE = DIR_PATH+"/Database/ToTheMars.tls"
-SAND_BOX_MODE = 0 #Simulation: 0: OFF - Bugs: Schedule near the 01~00~59, missing frame
 
-if SAND_BOX_MODE == 1:
+if SAND_BOX_MODE:
   print ("SANDBOX MODE")
   NEXT_TIME_FILE = CACHE_PATH + "/NextTimeFile-Sandbox.txt"
   START_TRADE_TIME = datetime.datetime.now() #GMT+7 Current time
@@ -64,7 +74,7 @@ else:
   'enableRateLimit': True
   })
   
-if SERVER_MODE == 0:
+if not SERVER_MODE:
   TIME_UTC_DELTA = datetime.timedelta(hours = 0)
   # Dump print to log file
   OLD_STDOUT = sys.stdout
@@ -108,17 +118,13 @@ def read_stock_list():
   return stockList
 
 # Read/Write format: %d-%m-%Y %H:%M:%S
-if SERVER_MODE == 0:
+if not SERVER_MODE:
   def read_next_time_stamp():
     try:
       with open(NEXT_TIME_FILE, "r") as file:
           return datetime.datetime.strptime(file.read(),'%d-%m-%Y %H:%M:%S')
     except IOError:
       return START_TRADE_TIME
-
-  def write_next_time_stamp(nextTimeStamp):
-    with open(NEXT_TIME_FILE, "w+") as file:
-      file.write(nextTimeStamp.strftime('%d-%m-%Y %H:%M:%S'))
 else:
   def read_next_time_stamp():
     try:
@@ -131,8 +137,9 @@ else:
       except IOError:
         return START_TRADE_TIME
 
-  def write_next_time_stamp(nextTimeStamp):
-    os.environ['NEXT_TIME_STAMP'] = nextTimeStamp.strftime('%d-%m-%Y %H:%M:%S')
+def write_next_time_stamp(nextTimeStamp):
+  with open(NEXT_TIME_FILE, "w+") as file:
+    file.write(nextTimeStamp.strftime('%d-%m-%Y %H:%M:%S'))
 
 class Trade:
   def __init__(self, stockName, currentTime, nextTimeStamp, timeFrame='1d'):
@@ -171,7 +178,7 @@ class Trade:
     self.processIndex = 0
     self.message = ""
     self.candlestick = ""
-    if SAND_BOX_MODE == 1:
+    if SAND_BOX_MODE:
       self.balance = 0
     self.get_historical_data()
     self.caculate_start_index()
@@ -287,7 +294,7 @@ class Trade:
         if self.candlestick != "":
           self.commands.append(9)
         
-        if SAND_BOX_MODE == 0:
+        if not SAND_BOX_MODE:
           if len(self.volumeProfiles) > 0:
             for key in self.volumeProfiles:
               diff = abs(self.close[i]-key)/self.close[i]
@@ -306,7 +313,7 @@ class Trade:
           self.prepare_message()
           send_message_telegram(self.message)
         # Trade stock  
-        if SAND_BOX_MODE == 1:
+        if SAND_BOX_MODE:
           if (len(self.commands) > 0) and (self.commands[0] == 1 or 
               self.commands[0] == 2 or self.commands[0] == 4): # Buy/Sell - Increase stoploss
             self.processIndex = i
@@ -352,7 +359,7 @@ class Trade:
           profit_report = 1
           message += "\n" + " - Bar is " + self.candlestick
         case 10:
-          if SAND_BOX_MODE == 0:
+          if not SAND_BOX_MODE:
             profit_report = 1
             message += "\n" + " - Near the support/resistance zone"
         case 11:
@@ -366,7 +373,7 @@ class Trade:
     if (profit_report == 1 and stoploss_setting == 0):
       message += "\n" + " - Profit now: {:.2f}%".format((currentData["close"]-self.buyPrice)/self.buyPrice*100) #*0.996
 
-    if SAND_BOX_MODE == 0:  
+    if not SAND_BOX_MODE:  
       for key in self.volumeProfiles:
         message += "\n" + " - Zone {:.3f}: {:.2f}M".format(key, self.volumeProfiles[key])
 
@@ -512,7 +519,7 @@ def schedule_analysis_stock():
     try:
       send_message_telegram("-------------- Day: " + currentTime.strftime("%d, %b %Y") + " --------------")
       for stockName in stockList:
-        if stockName != "BTC/USDT" and SAND_BOX_MODE == 1:
+        if stockName != "BTC/USDT" and SAND_BOX_MODE:
           continue
         # print("Pair: " + stockName)
         # respect rate limit
@@ -520,7 +527,7 @@ def schedule_analysis_stock():
         stockTrade = Trade(stockName, currentTime, nextTimeStamp, TIME_INTERVAL_STR)
         stockTrade.analysis_stock()
 
-        if SAND_BOX_MODE == 1:
+        if SAND_BOX_MODE:
           print("Balance: ",(stockTrade.get_balance(stockName))*stockTrade.stockData.iloc[-1]["close"] \
             + stockTrade.get_balance("USDT"), stockTrade.stockData.iloc[-1]["close"])
           
@@ -539,23 +546,24 @@ if __name__ == "__main__":
   try:
     # Run first time if needed
     schedule_analysis_stock()
-    if SAND_BOX_MODE == 1:
+    if SAND_BOX_MODE:
       scheduler.add_job(schedule_analysis_stock, 'interval', minutes=1, timezone=TIME_ZONE) # Recommend run at: 05s of each minute
       scheduler.start()
-    else:
+   
+    if not SERVER_MODE:
       # Program ended, turn off sys log file mode
       sys.stdout = OLD_STDOUT
       LOG_FILE.close()
 
   except Exception as ex:
     print("Program Exception: Is it related Telegram?", ex)
-    if SAND_BOX_MODE == 0:
+    if not SERVER_MODE:
       # Program ended, turn off sys log file mode
       sys.stdout = OLD_STDOUT
       LOG_FILE.close()
 
   # Windows sleep this task so using Window Task Schedule
-  # if SAND_BOX_MODE == 1:
+  # if SAND_BOX_MODE:
   #   # scheduler.add_job(schedule_analysis_stock, 'interval', minutes=1, timezone=TIME_ZONE) # Recommend run at: 05s of each minute
   #   scheduler.add_job(schedule_analysis_stock, 'cron', second="5", timezone=TIME_ZONE) # Recommend run at: 05s of each minute
   # else:

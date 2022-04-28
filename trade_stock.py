@@ -17,6 +17,7 @@ from talib import abstract
 import plotly.graph_objects as go
 from scipy import stats, signal
 import numpy as np
+import argparse
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 CACHE_PATH = DIR_PATH+'/cache'
@@ -26,8 +27,17 @@ if not isExist:
   # Create a new directory because it does not exist 
   os.makedirs(CACHE_PATH)
 
-SERVER_MODE = 1
-MODE = "VND" # VND/SSI/TCB #Reserved for future dev
+parser = argparse.ArgumentParser()
+parser.add_argument("-hm", "--historical-mode", help="Historical mode to select which vendor getting historical data "
+                                                     "Vendor: VND/SSI/TCB #Reserved for future dev ",
+                    default="VND", type=str)
+parser.add_argument("-s", "--server-mode", help="Run program in server like pythonanywhere/heroku "
+                                                "by default program will run in local machine",
+                    action="store_true", default=False)
+args = parser.parse_args()
+
+SERVER_MODE = args.server_mode
+HISTORICAL_MODE = args.historical_mode
 TELEGRAM_API_ID = "5030826661:AAH-C7ZGJexK3SkXIqM8CyDgieoR6ZFnXq8"
 TELEGRAM_CHANNEL_ID = "@botmuabanchungkhoan"
 # TIME_ZONE = timezone("Asia/Ho_Chi_Minh")
@@ -39,7 +49,7 @@ TIME_INTERVAL_DELTA = datetime.timedelta(days = 1) # Write next time search
 TIME_DURATION_DELTA = datetime.timedelta(days = 366)
 TIME_PROTECT_DELTA = datetime.timedelta(hours = 15, minutes= 10) # Add 15 hours 10 minutes to prevent missing data for 1 day interval 
 
-if SERVER_MODE == 0:
+if not SERVER_MODE:
   TIME_UTC_DELTA = datetime.timedelta(hours = 0)
   # Dump print to log file
   old_stdout = sys.stdout
@@ -174,17 +184,13 @@ def read_stock_list():
   return stockList
 
 # Read/Write format: %d-%m-%Y
-if SERVER_MODE == 0:
+if not SERVER_MODE:
   def read_next_time_stamp():
     try:
       with open(NEXT_TIME_FILE, "r") as file:
           return datetime.datetime.strptime(file.read(),'%d-%m-%Y')
     except IOError:
       return START_TRADE_TIME
-
-  def write_next_time_stamp(nextTimeStamp):
-    with open(NEXT_TIME_FILE, "w+") as file:
-      file.write(nextTimeStamp.strftime('%d-%m-%Y'))
 else:
   def read_next_time_stamp():
     try:
@@ -197,8 +203,9 @@ else:
       except IOError:
         return START_TRADE_TIME
 
-  def write_next_time_stamp(nextTimeStamp):
-    os.environ['NEXT_TIME_STAMP_STOCK'] = nextTimeStamp.strftime('%d-%m-%Y')
+def write_next_time_stamp(nextTimeStamp):
+  with open(NEXT_TIME_FILE, "w+") as file:
+    file.write(nextTimeStamp.strftime('%d-%m-%Y'))
 
 class Trade:
   def __init__(self, stockName, currentTime, nextTimeStamp):
@@ -521,14 +528,14 @@ if __name__ == "__main__":
     # Run first time if needed
     schedule_analysis_stock()
 
-    if SERVER_MODE == 0:
+    if not SERVER_MODE:
       # Program ended, turn off sys log file mode
       sys.stdout = old_stdout
       LOG_FILE.close()
 
   except Exception as ex:
     print("Program Exception: Is it related Telegram?", ex)
-    if SERVER_MODE == 0:
+    if not SERVER_MODE:
       # Program ended, turn off sys log file mode
       sys.stdout = old_stdout
       LOG_FILE.close()

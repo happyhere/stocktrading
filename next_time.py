@@ -25,7 +25,7 @@ TIME_UTC_DELTA = datetime.timedelta(hours = 7)
 TIME_PROTECT_DELTA = datetime.timedelta(days = 1, hours = 7, seconds = 10) # Add 10s to prevent missing data for 1 day interval 
 API_URL = "https://api.heroku.com/apps/warm-tundra-89719/dynos"
 API_PAYLOAD = {
-	"command": "python3 trade.py"
+	"command": "python3 trade.py -s"
 }
 API_HEADER = {
 	"Accept": "application/vnd.heroku+json; version=3",

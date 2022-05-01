@@ -100,7 +100,7 @@ def schedule_analysis_stock():
         nextTimeStamp = nextTimeStamp + TIME_INTERVAL_DELTA
 
       write_next_time_stamp(nextTimeStamp)
-      print ("------ End of Day:", currentTime, "------")
+      print ("----- End of Day:", currentTime, "-----")
     except Exception as ex:
       print("Something wrong: ", ex)
   else:

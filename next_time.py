@@ -83,7 +83,7 @@ def schedule_analysis_stock():
         nextTimeStamp = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) + TIME_PROTECT_DELTA - TIME_INTERVAL_DELTA
 
       write_next_time_stamp(nextTimeStamp)
-      print ("------ End of Day:", currentTime, "------")
+      print ("----- End of Day:", currentTime, "-----")
     except Exception as ex:
       print("Something wrong: ", ex)
   else:

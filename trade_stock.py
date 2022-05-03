@@ -384,7 +384,7 @@ class Trade:
           send_message_telegram(self.message)
       elif i == (self.dataLength-1) and (self.nextTimeStamp - TIME_INTERVAL_DELTA) >= convert_to_datetime(self.stockData.iloc[i]):
         # Time is comming but no stock data fitting
-        raise Exception("Check the system, " + self.stockName + " does not have next data: " + 
+        raise Exception("Check the system, " + self.stockName + " does not have target data, last: " + 
           convert_date_to_string(convert_to_datetime(self.stockData.iloc[i])))
 
   # Prepare message to send anywhere

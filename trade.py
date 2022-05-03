@@ -321,7 +321,7 @@ class Trade:
       elif i == (self.dataLength-2) and (self.nextTimeStamp - START_INDEX_TIME_DELTA) \
             >= convert_string_to_date(self.stockData.iloc[i]["timestamp"]):
         # Time is comming but no stock data fitting
-        raise Exception("Check the system, " + self.stockName + " does not have next data: " + self.stockData.iloc[i]["timestamp"])
+        raise Exception("Check the system, " + self.stockName + " does not have target data, last: " + self.stockData.iloc[i]["timestamp"])
 
   # Prepare message to send anywhere
   def prepare_message(self):

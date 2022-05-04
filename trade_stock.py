@@ -514,7 +514,7 @@ def schedule_analysis_stock():
         nextTimeStamp = lastTimeStamp + TIME_INTERVAL_DELTA
       write_next_time_stamp(nextTimeStamp)
       print ("------ EOD:", currentTime, "------")
-      send_message_telegram("------------ EOD: " + currentTime.strftime("%d, %b %Y") + " ------------")
+      send_message_telegram("-------------- EOD: " + currentTime.strftime("%d, %b %Y") + " --------------")
     except Exception as ex:
       send_message_telegram("Something wrong: " + str(ex))
       print("Something wrong: ", ex)

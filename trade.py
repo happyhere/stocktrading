@@ -533,8 +533,8 @@ def schedule_analysis_stock():
           
       nextTimeStamp = convert_string_to_date(stockTrade.stockData.iloc[-1]["timestamp"]) + TIME_PROTECT_DELTA
       write_next_time_stamp(nextTimeStamp)
-      print ("------ End of Day:", currentTime, "------")
-      send_message_telegram("---------- End of Day: " + currentTime.strftime("%d, %b %Y") + " ----------")
+      print ("------ EOD:", currentTime, "------")
+      send_message_telegram("------------ EOD: " + currentTime.strftime("%d, %b %Y") + " ------------")
     except Exception as ex:
       send_message_telegram("Something wrong: " + str(ex))
       print("Something wrong: ", ex)

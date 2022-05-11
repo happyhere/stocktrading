@@ -437,7 +437,7 @@ class Trade:
       message += "\n" + " - Profit now: {:.2f}%".format((currentData["close"]-self.buyPrice)/self.buyPrice*100) #*0.996
 
     for key in self.volumeProfiles:
-      message += "\n" + " - Zone {:.3f}: {:.0f}M".format(key, self.volumeProfiles[key])
+      message += "\n" + " - Zone {:.3f}: {:.0f}".format(key, self.volumeProfiles[key])
 
     message += "\n" + " - Close at : " + "{:.3f}".format(currentData["close"]) \
             +  "\n" + " - Value at MA5: " + "{:.3f}".format(self.ma5[self.processIndex]) \

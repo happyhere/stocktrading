@@ -375,7 +375,7 @@ class Trade:
 
     if not SAND_BOX_MODE:  
       for key in self.volumeProfiles:
-        message += "\n" + " - Zone {:.3f}: {:.0f}M".format(key, self.volumeProfiles[key])
+        message += "\n" + " - Zone {:.3f}: {:.0f}".format(key, self.volumeProfiles[key])
 
     message += "\n" + " - Close at : " + "{:.3f}".format(currentData["close"]) \
             +  "\n" + " - Value at MA5: " + "{:.3f}".format(self.ma5[self.processIndex]) \

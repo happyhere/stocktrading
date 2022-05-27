@@ -236,6 +236,7 @@ class Trade:
     self.harami = []
     self.highWave = []
     # Process time by time
+    self.refPrice = 0
     self.buyPrice = 0
     self.hold = 0
     self.stoplossPrice = 0
@@ -307,6 +308,11 @@ class Trade:
         self.commands.append(1)
         self.buyPrice = self.close[i]
         self.hold = 1
+        refPrice = (self.ma5[i] + self.ma10[i] + self.ma20[i])/3 # Reference for buy
+        if (refPrice > self.close[i]):
+          self.refPrice = self.close[i]
+        else:
+          self.refPrice = refPrice
         self.stoplossPrice = self.buyPrice - self.atr[i] # Stoploss based ATR(10)
         # if (self.atr[i] > 0.085*self.buyPrice): # Stoploss should start from 8.5%
         #   self.stoplossPrice = self.buyPrice - self.atr[i]
@@ -332,8 +338,8 @@ class Trade:
           self.commands.append(4)
           self.stoplossPrice = self.buyPrice
 
-        # Buy if have a chance
-        if self.close[i] <= self.buyPrice and len(self.commands) == 0:
+        # Buy if have a chance, refPrice <-> close: 7%
+        if (self.close[i]*0.93) <= self.refPrice and len(self.commands) == 0:
           self.commands.append(5)
       
       if self.hold == 1 or len(self.commands) > 0:
@@ -397,7 +403,7 @@ class Trade:
       match command:
         case 1: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Buy at: {:.3f}".format(currentData["close"]*1.002)
+          message += "\n" + " - Ref Buy at: {:.3f}".format(self.refPrice*1.002)
         case 2: # Sell: 0.4~0.5%
           profit_report = 1
           message += "\n" + " - Sell at: {:.3f}".format(currentData["close"]*0.998)
@@ -409,7 +415,7 @@ class Trade:
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
         case 5: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Possible Risk Buy, Old at: {:.3f}".format(self.buyPrice)
+          message += "\n" + " - Possible Risk Buy, Ref at: {:.3f}".format(self.refPrice)
         case 6:
           profit_report = 1
           message += "\n" + " - RSI cross-down below 70"

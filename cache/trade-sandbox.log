@@ -1,0 +1,33 @@
+------ Day: 2022-05-31 15:56:27.519031 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-05-31 15:56:27.173104 UTC+7
+Processing:  BTC/USDT 364 2022-05-31 08:55:00 UTC
+Sent a message to Telegram
+No any orders to cancel binance {"code":-2011,"msg":"Unknown order sent."}
+Sent a message to Telegram
+Order Buy: {'info': {'symbol': 'BTCUSDT', 'orderId': '11289925', 'orderListId': '-1', 'clientOrderId': 'x-R4BD3S824bcacf6ad471fbfeef8ef4', 'transactTime': '1653987394329', 'price': '0.00000000', 'origQty': '0.00316000', 'executedQty': '0.00316000', 'cummulativeQuoteQty': '99.96991800', 'status': 'FILLED', 'timeInForce': 'GTC', 'type': 'MARKET', 'side': 'BUY', 'fills': [{'price': '31636.05000000', 'qty': '0.00316000', 'commission': '0.00000000', 'commissionAsset': 'BTC', 'tradeId': '4548066'}]}, 'id': '11289925', 'clientOrderId': 'x-R4BD3S824bcacf6ad471fbfeef8ef4', 'timestamp': 1653987394329, 'datetime': '2022-05-31T08:56:34.329Z', 'lastTradeTimestamp': None, 'symbol': 'BTC/USDT', 'type': 'market', 'timeInForce': 'IOC', 'postOnly': False, 'side': 'buy', 'price': 31636.05, 'stopPrice': None, 'amount': 0.00316, 'cost': 99.969918, 'average': 31636.05, 'filled': 0.00316, 'remaining': 0.0, 'status': 'closed', 'fee': {'currency': 'BTC', 'cost': 0.0}, 'trades': [{'info': {'price': '31636.05000000', 'qty': '0.00316000', 'commission': '0.00000000', 'commissionAsset': 'BTC', 'tradeId': '4548066'}, 'timestamp': None, 'datetime': None, 'symbol': 'BTC/USDT', 'id': '4548066', 'order': '11289925', 'type': 'market', 'side': 'buy', 'takerOrMaker': None, 'price': 31636.05, 'amount': 0.00316, 'cost': 99.969918, 'fee': {'cost': 0.0, 'currency': 'BTC'}, 'fees': [{'currency': 'BTC', 'cost': '0.00000000'}]}], 'fees': [{'currency': 'BTC', 'cost': 0.0}]}
+Balance:  41637.6149296 31637.61
+------ EOD: 2022-05-31 15:56:27.519031 ------
+Sent a message to Telegram
+------ Day: 2022-05-31 15:58:48.674424 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-05-31 15:58:48.288611 UTC+7
+Processing:  BTC/USDT 364 2022-05-31 08:57:00 UTC
+Balance:  41628.9877536 31629.01
+------ EOD: 2022-05-31 15:58:48.674424 ------
+Sent a message to Telegram
+------ Day: 2022-05-31 15:59:31.153256 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-05-31 15:59:30.819887 UTC+7
+Processing:  BTC/USDT 364 2022-05-31 08:58:00 UTC
+Balance:  41624.0221116 31624.06
+------ EOD: 2022-05-31 15:59:31.153256 ------
+Sent a message to Telegram
+Program Exception: Is it related Telegram? Scheduler is already running
+------ Day: 2022-05-31 16:02:07.786235 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-05-31 16:02:07.503027 UTC+7
+Processing:  BTC/USDT 364 2022-05-31 09:01:00 UTC
+Balance:  41627.9344356 31627.96
+------ EOD: 2022-05-31 16:02:07.786235 ------
+Sent a message to Telegram

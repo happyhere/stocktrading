@@ -36,7 +36,7 @@ parser.add_argument("-s", "--server-mode", help="Run program in server like pyth
                     action="store_true", default=False)
 args = parser.parse_args()
 
-SERVER_MODE = args.server_mode
+SERVER_MODE = args.server_mode # Heroku Server: GMT +0, print log
 HISTORICAL_MODE = args.historical_mode
 TELEGRAM_API_ID = "5030826661:AAH-C7ZGJexK3SkXIqM8CyDgieoR6ZFnXq8"
 TELEGRAM_CHANNEL_ID = "@botmuabanchungkhoan"

@@ -5,7 +5,8 @@ import pandas as pd
 import datetime
 import telegram
 # Scheduler
-from apscheduler.schedulers.blocking import BlockingScheduler
+# from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import utc,timezone
 #import asyncio
 import ccxt
@@ -34,7 +35,7 @@ parser.add_argument("-s", "--server-mode", help="Run program in server like pyth
                     action="store_true", default=False)
 args = parser.parse_args()
 
-SERVER_MODE = args.server_mode
+SERVER_MODE = args.server_mode # Heroku Server: GMT +0, print log
 SAND_BOX_MODE = args.sandbox
 TELEGRAM_API_ID = "5249469985:AAF6_SyVBvigBM-s3EyghW63l64_CCbaIzw"
 TELEGRAM_CHANNEL_ID = "@bottradecryptocoin"
@@ -43,16 +44,18 @@ STOCK_FILE = DIR_PATH+"/Database/ToTheMars.tls"
 if SAND_BOX_MODE:
   print ("SANDBOX MODE")
   NEXT_TIME_FILE = CACHE_PATH + "/NextTimeFile-Sandbox.txt"
+  LOG_PATH = CACHE_PATH + "/trade-sandbox.log"
   START_TRADE_TIME = datetime.datetime.now() #GMT+7 Current time
-  START_INDEX_TIME_DELTA = datetime.timedelta(hours = 7, seconds=120) #Zone compare & start point
-  TIME_PROTECT_DELTA = datetime.timedelta(hours = 7, seconds = 62) # Add 2s to prevent missing data for 1m interval 
-  TIME_INTERVAL_STR = '1m'
+  START_INDEX_TIME_DELTA = datetime.timedelta(hours = 7, minutes=120) #Zone compare & start point
+  TIME_PROTECT_DELTA = datetime.timedelta(hours = 7, minutes=60, seconds = 2) # Add 2s to prevent missing data for 1h interval 
+  TIME_INTERVAL_STR = '1h'
   ## Sandbox mode don't using old data file:
   if os.path.isfile(NEXT_TIME_FILE):
     os.remove(NEXT_TIME_FILE)
   TIME_ZONE = timezone("Asia/Ho_Chi_Minh")
   # Scheduler for any plans
-  scheduler = BlockingScheduler()
+  scheduler = BackgroundScheduler()
+  # scheduler = BlockingScheduler()
   # configure exchange
   exchange = ccxt.binance({
     'apiKey': 'yI3PFfXDUgaU2VulE4N2IIosGDtLyLEtkAookD6JHWba55G8itCwXwlZk2yrreC6',
@@ -64,6 +67,7 @@ if SAND_BOX_MODE:
   exchange.load_markets()
 else:
   NEXT_TIME_FILE = CACHE_PATH + "/NextTimeFile.txt"
+  LOG_PATH = CACHE_PATH + "/trade.log"
   START_TRADE_TIME = datetime.datetime.strptime("2022-03-30 15:33:00",'%Y-%m-%d %H:%M:%S') #GMT+7 Trade time
   START_INDEX_TIME_DELTA = datetime.timedelta(days = 2, hours = 7) #Zone compare
   TIME_PROTECT_DELTA = datetime.timedelta(days = 1, hours = 7, seconds = 10) # Add 10s to prevent missing data for 1 day interval 
@@ -78,10 +82,13 @@ if not SERVER_MODE:
   TIME_UTC_DELTA = datetime.timedelta(hours = 0)
   # Dump print to log file
   OLD_STDOUT = sys.stdout
-  LOG_FILE = open(CACHE_PATH + "/trade.log","a")
+  LOG_FILE = open(LOG_PATH,"a")
   sys.stdout = LOG_FILE
 else:
-  TIME_UTC_DELTA = datetime.timedelta(hours = 7)
+  if SAND_BOX_MODE: ##TODO: Cheat: Run Sandbox in server meaning run in local with printting log
+    TIME_UTC_DELTA = datetime.timedelta(hours = 0)
+  else:
+    TIME_UTC_DELTA = datetime.timedelta(hours = 7)
 
 # # load markets and all coin_pairs
 # coin_pairs = exchange.symbols
@@ -553,8 +560,15 @@ if __name__ == "__main__":
     # Run first time if needed
     schedule_analysis_stock()
     if SAND_BOX_MODE:
-      scheduler.add_job(schedule_analysis_stock, 'interval', minutes=1, timezone=TIME_ZONE) # Recommend run at: 05s of each minute
-      scheduler.start()
+      scheduler.add_job(schedule_analysis_stock, 'interval', minutes=60, timezone=TIME_ZONE) # Recommend run at: 05s of each minute
+      # scheduler.start()
+      
+      try:
+          scheduler.start()
+          while(True):
+            time.sleep(10)
+      except (KeyboardInterrupt, SystemExit):
+          pass
    
     if not SERVER_MODE:
       # Program ended, turn off sys log file mode

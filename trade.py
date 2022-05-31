@@ -37,8 +37,6 @@ args = parser.parse_args()
 
 SERVER_MODE = args.server_mode # Heroku Server: GMT +0, print log
 SAND_BOX_MODE = args.sandbox
-TELEGRAM_API_ID = "5249469985:AAF6_SyVBvigBM-s3EyghW63l64_CCbaIzw"
-TELEGRAM_CHANNEL_ID = "@bottradecryptocoin"
 STOCK_FILE = DIR_PATH+"/Database/ToTheMars.tls"
 
 if SAND_BOX_MODE:
@@ -49,6 +47,8 @@ if SAND_BOX_MODE:
   START_INDEX_TIME_DELTA = datetime.timedelta(hours = 7, minutes=120) #Zone compare & start point
   TIME_PROTECT_DELTA = datetime.timedelta(hours = 7, minutes=60, seconds = 2) # Add 2s to prevent missing data for 1h interval 
   TIME_INTERVAL_STR = '1h'
+  TELEGRAM_API_ID = "5588630950:AAHXR7kcwpwdPVEvx2YwXUVeuQ_Qaz_wPNQ"
+  TELEGRAM_CHANNEL_ID = "@telephaisinhtienao"
   ## Sandbox mode don't using old data file:
   if os.path.isfile(NEXT_TIME_FILE):
     os.remove(NEXT_TIME_FILE)
@@ -72,6 +72,8 @@ else:
   START_INDEX_TIME_DELTA = datetime.timedelta(days = 2, hours = 7) #Zone compare
   TIME_PROTECT_DELTA = datetime.timedelta(days = 1, hours = 7, seconds = 10) # Add 10s to prevent missing data for 1 day interval 
   TIME_INTERVAL_STR = '1d'
+  TELEGRAM_API_ID = "5249469985:AAF6_SyVBvigBM-s3EyghW63l64_CCbaIzw"
+  TELEGRAM_CHANNEL_ID = "@bottradecryptocoin"
   # configure exchange
   exchange = ccxt.binance({
   'timeout': 10000,
@@ -238,7 +240,12 @@ class Trade:
     """
     print("#" + self.stockName + " Day: " , self.nextTimeStamp, "UTC+7")
     for i in range(self.startIndex, (self.dataLength-1)): # Crypto: don't use last value
+      if i < 20: # Condition to fit MA20 has value
+        continue
       self.commands = [] # 0: Do nothing, 1: Buy, 2: Sell, 3-4: Stoploss, 5: Increase stoploss, 6: Buy if missing, 7-11: Indicators 
+      # Caculate prediction next day MA10 vs MA20
+      nextMA10 = (self.ma10[i]*10 - self.close[i-9] + self.close[i])/10
+      nextMA20 = (self.ma20[i]*20 - self.close[i-19] + self.close[i])/20
       # If the MA10 crosses MA20 line upward
       if self.ma10[i] > self.ma20[i] and self.ma10[i - 1] <= self.ma20[i - 1] and self.hold == 0: # and self.macdHistogram[i] > -0.005 
         self.commands.append(1)
@@ -259,8 +266,6 @@ class Trade:
         self.commands.append(2)
         self.hold = 0
         self.stoplossPrice = 0
-        if self.ma5[i] > self.ma10[i]: #Uptrend warning
-          self.commands.append(12)
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
@@ -317,6 +322,15 @@ class Trade:
 
         if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
+
+        if nextMA10 < nextMA20: # Warning next downtrend
+          self.commands.append(13)
+
+      if self.hold == 0:
+        if self.ma5[i] > self.ma10[i] and len(self.commands) > 0: #Warning on Sell
+          self.commands.append(12)
+        if nextMA10 >= nextMA20: # Warning next uptrend
+          self.commands.append(14)
 
       if (self.nextTimeStamp - START_INDEX_TIME_DELTA) < convert_string_to_date(self.stockData.iloc[i]["timestamp"]):
         print ("Processing: ",self.stockName, i, convert_string_to_date(self.stockData.iloc[i]["timestamp"]), "UTC")
@@ -377,9 +391,13 @@ class Trade:
             message += "\n" + " - Near the support/resistance zone"
         case 11:
           profit_report = 1
-          message += "\n" + " - MA5 below MA10 warning"
+          message += "\n" + " - MA5 < MA10 warning"
         case 12:
-          message += "\n" + " - MA5 above MA10 possible to hold"
+          message += "\n" + " - MA5 > MA10 possible to hold"
+        case 13:
+          message += "\n" + " - Predict MA10 > MA20 should sell"
+        case 14:
+          message += "\n" + " - Predict MA10 < MA20 possible buy"
     
     if (stoploss_setting == 1):
       message += "\n" + " - Stoploss at : {:.3f} {:.2f}%".format(self.stoplossPrice, ((self.stoplossPrice/self.buyPrice)-1)*100); # Stoploss ATR
@@ -560,7 +578,8 @@ if __name__ == "__main__":
     # Run first time if needed
     schedule_analysis_stock()
     if SAND_BOX_MODE:
-      scheduler.add_job(schedule_analysis_stock, 'interval', minutes=60, timezone=TIME_ZONE) # Recommend run at: 05s of each minute
+      # scheduler.add_job(schedule_analysis_stock, 'interval', minutes=60, timezone=TIME_ZONE) # Recommend run at: 05s of each minute
+      scheduler.add_job(schedule_analysis_stock, 'cron', minute="00", second="30", timezone=TIME_ZONE)  # run on every hour at hh:00:30
       # scheduler.start()
       
       try:

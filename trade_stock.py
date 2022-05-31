@@ -302,7 +302,12 @@ class Trade:
     """
     print("#" + self.stockName + " Day: " , self.nextTimeStamp)
     for i in range(self.startIndex, self.dataLength): # Crypto: don't use last value
-      self.commands = [] # 0: Do nothing, 1: Buy, 2: Sell, 3-4: Stoploss, 5: Increase stoploss, 6: Buy if missing, 7-11: Indicators 
+      if i < 20: # Condition to fit MA20 has value
+        continue
+      self.commands = [] # 0: Do nothing, 1: Buy, 2: Sell, 3-4: Stoploss, 5: Increase stoploss, 6: Buy if missing, 7-11: Indicators
+      # Caculate prediction next day MA10 vs MA20
+      nextMA10 = (self.ma10[i]*10 - self.close[i-9] + self.close[i])/10
+      nextMA20 = (self.ma20[i]*20 - self.close[i-19] + self.close[i])/20
       # If the MA10 crosses MA20 line upward
       if self.ma10[i] > self.ma20[i] and self.ma10[i - 1] <= self.ma20[i - 1] and self.hold == 0: # and self.macdHistogram[i] > -0.1
         self.commands.append(1)
@@ -323,8 +328,6 @@ class Trade:
         self.commands.append(2)
         self.hold = 0
         self.stoplossPrice = 0
-        if self.ma5[i] > self.ma10[i]: #Uptrend warning
-          self.commands.append(12)
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
@@ -381,6 +384,15 @@ class Trade:
         if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
 
+        if nextMA10 < nextMA20: # Warning next downtrend
+          self.commands.append(13)
+
+      if self.hold == 0:
+        if self.ma5[i] > self.ma10[i] and len(self.commands) > 0: #Warning on Sell
+          self.commands.append(12)
+        if nextMA10 >= nextMA20: # Warning next uptrend
+          self.commands.append(14)
+
       if (self.nextTimeStamp - TIME_INTERVAL_DELTA) < convert_to_datetime(self.stockData.iloc[i]):
         print ("Processing: ", self.stockName, i, convert_to_datetime(self.stockData.iloc[i]))
         # Push to telegram
@@ -433,9 +445,13 @@ class Trade:
           message += "\n" + " - Near the support/resistance zone"
         case 11:
           profit_report = 1
-          message += "\n" + " - MA5 below MA10 warning"
+          message += "\n" + " - MA5 < MA10 warning"
         case 12:
-          message += "\n" + " - MA5 above MA10 possible to hold"
+          message += "\n" + " - MA5 > MA10 possible to hold"
+        case 13:
+          message += "\n" + " - Predict MA10 > MA20 should sell"
+        case 14:
+          message += "\n" + " - Predict MA10 < MA20 possible buy"
     
     if (stoploss_setting == 1):
       message += "\n" + " - Stoploss at : {:.3f} {:.2f}%".format(self.stoplossPrice, ((self.stoplossPrice/self.buyPrice)-1)*100); # Stoploss ATR

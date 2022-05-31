@@ -403,7 +403,7 @@ class Trade:
       match command:
         case 1: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Ref Buy at: {:.3f}".format(self.refPrice*1.002)
+          message += "\n" + " - Ref Buy at: {:.3f}".format(self.refPrice*1.003)
         case 2: # Sell: 0.4~0.5%
           profit_report = 1
           message += "\n" + " - Sell at: {:.3f}".format(currentData["close"]*0.998)

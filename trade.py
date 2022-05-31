@@ -275,7 +275,7 @@ class Trade:
           self.stoplossPrice = self.buyPrice
 
         # Buy if have a chance, refPrice <-> close: 10%
-        if (self.close[i]*0.9) <= self.refPrice and len(self.commands) == 0:
+        if (self.close[i]*0.9) <= self.refPrice and (len(self.commands) == 0 or self.commands[0] > 2):
           self.commands.append(5)
 
       if self.hold == 1 or len(self.commands) > 0:

@@ -358,7 +358,7 @@ class Trade:
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
         case 5: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Possible Buy, Ref at: {:.3f}".format(self.refPrice)
+          message += "\n" + " - Possible Buy, Ref at: {:.3f}".format(self.refPrice*1.003)
         case 6:
           profit_report = 1
           message += "\n" + " - RSI cross-down below 70"

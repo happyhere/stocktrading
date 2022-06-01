@@ -343,7 +343,7 @@ class Trade:
               self.refPrice = self.close[i]
             else:
               self.refPrice = refPrice
-            self.stoplossPrice = self.refPrice - self.atr[i] # Stoploss based ATR(10)
+            self.stoplossPrice = self.buyPrice - self.atr[i] # Stoploss based ATR(10)
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
@@ -357,8 +357,8 @@ class Trade:
           self.commands.append(4)
           self.stoplossPrice = self.buyPrice
 
-        # Buy if have a chance, refPrice <-> close: 7%
-        if (self.close[i]*0.93) <= self.refPrice and (len(self.commands) == 0 or self.commands[0] > 2):
+        # Buy if have a chance, buyPrice <-> close: 7%
+        if (self.close[i]*0.93) <= self.buyPrice and (len(self.commands) == 0 or self.commands[0] > 2):
           self.commands.append(5)
       
       if self.hold == 1 or len(self.commands) > 0:
@@ -425,7 +425,9 @@ class Trade:
       match command:
         case 1: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Ref Buy at: {:.3f}".format(self.refPrice*1.003)
+          message += "\n" + " - Buy at: {:.3f}".format(self.refPrice*1.003)
+          if (self.refPrice < self.buyPrice):
+            message += "-{:.3f}".format(self.buyPrice*1.002)
         case 2: # Sell: 0.4~0.5%
           profit_report = 1
           message += "\n" + " - Sell at: {:.3f}".format(currentData["close"]*0.998)
@@ -437,7 +439,9 @@ class Trade:
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
         case 5: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Possible Risk Buy, Ref at: {:.3f}".format(self.refPrice*1.003)
+          message += "\n" + " - Possible Buy at: {:.3f}".format(self.refPrice*1.003)
+          if (self.refPrice < self.buyPrice):
+            message += "-{:.3f}".format(self.buyPrice*1.002)
         case 6:
           profit_report = 1
           message += "\n" + " - RSI cross-down below 70"
@@ -465,7 +469,9 @@ class Trade:
         case 15:
           message += "\n" + " - Predict MA10 >= MA20 possible buy"
           stoploss_setting = 1
-          message += "\n" + " - Possible Risk Buy, Ref at: {:.3f}".format(self.refPrice*1.003)
+          message += "\n" + " - Possible Buy at: {:.3f}".format(self.refPrice*1.003)
+          if (self.refPrice < self.buyPrice):
+            message += "-{:.3f}".format(self.buyPrice*1.002)
     
     if (stoploss_setting == 1):
       message += "\n" + " - Stoploss at : {:.3f} {:.2f}%".format(self.stoplossPrice, ((self.stoplossPrice/self.buyPrice)-1)*100); # Stoploss ATR

@@ -327,7 +327,7 @@ class Trade:
           self.commands.append(13)
 
       if self.hold == 0:
-        if self.ma5[i] > self.ma10[i] and len(self.commands) > 0: #Warning on Sell
+        if self.ma5[i] >= self.ma10[i] and len(self.commands) > 0: # Possible to hold on Sell
           self.commands.append(12)
         if nextMA10 >= nextMA20: # Warning next uptrend
           self.commands.append(14)
@@ -391,13 +391,13 @@ class Trade:
             message += "\n" + " - Near the support/resistance zone"
         case 11:
           profit_report = 1
-          message += "\n" + " - MA5 < MA10 warning"
+          message += "\n" + " - MA5 < MA10 warning hold"
         case 12:
-          message += "\n" + " - MA5 > MA10 possible to hold"
+          message += "\n" + " - MA5 >= MA10 possible to hold"
         case 13:
-          message += "\n" + " - Predict MA10 > MA20 should sell"
+          message += "\n" + " - Predict MA10 < MA20 should sell"
         case 14:
-          message += "\n" + " - Predict MA10 < MA20 possible buy"
+          message += "\n" + " - Predict MA10 >= MA20 possible buy"
     
     if (stoploss_setting == 1):
       message += "\n" + " - Stoploss at : {:.3f} {:.2f}%".format(self.stoplossPrice, ((self.stoplossPrice/self.buyPrice)-1)*100); # Stoploss ATR

@@ -267,6 +267,22 @@ class Trade:
         self.hold = 0
         self.stoplossPrice = 0
 
+      if self.hold == 0:
+        if len(self.commands) > 0:
+          if self.ma5[i] >= self.ma10[i]: # Possible to hold on Sell
+            self.commands.append(13)
+          if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
+            self.commands.append(14)
+        else: # Not remind fake dump, call buy before real signal
+          if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
+            self.commands.append(15)
+            refPrice = (self.ma5[i] + self.ma10[i] + self.ma20[i])/3 # Reference for buy
+            if (refPrice > self.close[i]):
+              self.refPrice = self.close[i]
+            else:
+              self.refPrice = refPrice
+            self.stoplossPrice = self.refPrice - self.atr[i] # Stoploss based ATR(10)
+
       if self.hold == 1: 
         # Stoploss warning trigger your balance
         if self.low[i] < self.stoplossPrice and self.stoplossPrice != 0 and len(self.commands) == 0:
@@ -325,13 +341,7 @@ class Trade:
 
       if self.hold == 1 or SAND_BOX_MODE: 
         if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Warning next downtrend
-          self.commands.append(13)
-
-      if self.hold == 0:
-        if self.ma5[i] >= self.ma10[i] and len(self.commands) > 0: # Possible to hold on Sell
           self.commands.append(12)
-        if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
-          self.commands.append(14)
 
       if (self.nextTimeStamp - START_INDEX_TIME_DELTA) < convert_string_to_date(self.stockData.iloc[i]["timestamp"]):
         print ("Processing: ",self.stockName, i, convert_string_to_date(self.stockData.iloc[i]["timestamp"]), "UTC")
@@ -394,11 +404,15 @@ class Trade:
           profit_report = 1
           message += "\n" + " - MA5 < MA10 warning hold"
         case 12:
-          message += "\n" + " - MA5 >= MA10 possible to hold"
-        case 13:
           message += "\n" + " - Predict MA10 < MA20 should sell"
+        case 13:
+          message += "\n" + " - MA5 >= MA10 possible to hold"
         case 14:
+          message += "\n" + " - Predict MA10 >= MA20 possible hold"
+        case 15:
           message += "\n" + " - Predict MA10 >= MA20 possible buy"
+          stoploss_setting = 1
+          message += "\n" + " - Possible Buy, Ref at: {:.3f}".format(self.refPrice*1.003)
     
     if (stoploss_setting == 1):
       message += "\n" + " - Stoploss at : {:.3f} {:.2f}%".format(self.stoplossPrice, ((self.stoplossPrice/self.buyPrice)-1)*100); # Stoploss ATR

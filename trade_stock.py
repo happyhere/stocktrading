@@ -384,6 +384,7 @@ class Trade:
         if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
 
+      if self.hold == 1:
         if nextMA10 < nextMA20: # Warning next downtrend
           self.commands.append(13)
 

@@ -57,13 +57,13 @@ if SAND_BOX_MODE:
   scheduler = BackgroundScheduler()
   # scheduler = BlockingScheduler()
   # configure exchange
+  # 'apiKey': 'yI3PFfXDUgaU2VulE4N2IIosGDtLyLEtkAookD6JHWba55G8itCwXwlZk2yrreC6',
+  # 'secret': 'S1k5SbLkEc6XpQJOv5VBGFBY0srujicUGt0RxpLL0wswKeBseieUlTAAFjXYGb7D',
   exchange = ccxt.binance({
-    'apiKey': 'yI3PFfXDUgaU2VulE4N2IIosGDtLyLEtkAookD6JHWba55G8itCwXwlZk2yrreC6',
-    'secret': 'S1k5SbLkEc6XpQJOv5VBGFBY0srujicUGt0RxpLL0wswKeBseieUlTAAFjXYGb7D',
     'timeout': 10000,
     'enableRateLimit': True
   })
-  exchange.setSandboxMode("True")
+  # exchange.setSandboxMode("True")
   exchange.load_markets()
 else:
   NEXT_TIME_FILE = CACHE_PATH + "/NextTimeFile.txt"
@@ -323,14 +323,14 @@ class Trade:
         if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
 
-      if self.hold == 1:
-        if nextMA10 < nextMA20: # Warning next downtrend
+      if self.hold == 1 or SAND_BOX_MODE: 
+        if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Warning next downtrend
           self.commands.append(13)
 
       if self.hold == 0:
         if self.ma5[i] >= self.ma10[i] and len(self.commands) > 0: # Possible to hold on Sell
           self.commands.append(12)
-        if nextMA10 >= nextMA20: # Warning next uptrend
+        if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
           self.commands.append(14)
 
       if (self.nextTimeStamp - START_INDEX_TIME_DELTA) < convert_string_to_date(self.stockData.iloc[i]["timestamp"]):
@@ -341,11 +341,11 @@ class Trade:
           self.prepare_message()
           send_message_telegram(self.message)
         # Trade stock  
-        if SAND_BOX_MODE:
-          if (len(self.commands) > 0) and (self.commands[0] == 1 or 
-              self.commands[0] == 2 or self.commands[0] == 4): # Buy/Sell - Increase stoploss
-            self.processIndex = i
-            self.trade_stock()
+        # if SAND_BOX_MODE:
+        #   if (len(self.commands) > 0) and (self.commands[0] == 1 or 
+        #       self.commands[0] == 2 or self.commands[0] == 4): # Buy/Sell - Increase stoploss
+        #     self.processIndex = i
+        #     self.trade_stock()
       elif i == (self.dataLength-2) and (self.nextTimeStamp - START_INDEX_TIME_DELTA) \
             >= convert_string_to_date(self.stockData.iloc[i]["timestamp"]):
         # Time is comming but no stock data fitting
@@ -559,9 +559,9 @@ def schedule_analysis_stock():
         stockTrade = Trade(stockName, currentTime, nextTimeStamp, TIME_INTERVAL_STR)
         stockTrade.analysis_stock()
 
-        if SAND_BOX_MODE:
-          print("Balance: ",(stockTrade.get_balance(stockName))*stockTrade.stockData.iloc[-1]["close"] \
-            + stockTrade.get_balance("USDT"), stockTrade.stockData.iloc[-1]["close"])
+        # if SAND_BOX_MODE:
+        #   print("Balance: ",(stockTrade.get_balance(stockName))*stockTrade.stockData.iloc[-1]["close"] \
+        #     + stockTrade.get_balance("USDT"), stockTrade.stockData.iloc[-1]["close"])
           
       nextTimeStamp = convert_string_to_date(stockTrade.stockData.iloc[-1]["timestamp"]) + TIME_PROTECT_DELTA
       write_next_time_stamp(nextTimeStamp)

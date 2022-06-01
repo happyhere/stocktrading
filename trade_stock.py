@@ -383,15 +383,14 @@ class Trade:
 
         if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
-
-      if self.hold == 1:
-        if nextMA10 < nextMA20: # Warning next downtrend
+ 
+        if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Warning next downtrend
           self.commands.append(13)
 
       if self.hold == 0:
         if self.ma5[i] >= self.ma10[i] and len(self.commands) > 0: # Possible to hold on Sell
           self.commands.append(12)
-        if nextMA10 >= nextMA20: # Warning next uptrend
+        if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
           self.commands.append(14)
 
       if (self.nextTimeStamp - TIME_INTERVAL_DELTA) < convert_to_datetime(self.stockData.iloc[i]):

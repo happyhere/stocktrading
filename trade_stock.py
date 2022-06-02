@@ -305,15 +305,15 @@ class Trade:
       if i < 20: # Condition to fit MA20 has value
         continue
       self.commands = [] # 0: Do nothing, 1: Buy, 2: Sell, 3-4: Stoploss, 5: Increase stoploss, 6: Buy if missing, 7-11: Indicators
-      # Caculate prediction next day MA10 vs MA20
+      # Caculate prediction next day MA10 vs MA20, refPrice
       nextMA10 = (self.ma10[i]*10 - self.close[i-9] + self.close[i])/10
       nextMA20 = (self.ma20[i]*20 - self.close[i-19] + self.close[i])/20
+      refPrice = (self.ma5[i] + self.ma10[i] + self.ma20[i])/3 # Reference for buy/sell
       # If the MA10 crosses MA20 line upward
       if self.ma10[i] > self.ma20[i] and self.ma10[i - 1] <= self.ma20[i - 1] and self.hold == 0: # and self.macdHistogram[i] > -0.1
         self.commands.append(1)
         self.buyPrice = self.close[i]
         self.hold = 1
-        refPrice = (self.ma5[i] + self.ma10[i] + self.ma20[i])/3 # Reference for buy
         if (refPrice > self.close[i]):
           self.refPrice = self.close[i]
         else:
@@ -328,6 +328,10 @@ class Trade:
         self.commands.append(2)
         self.hold = 0
         self.stoplossPrice = 0
+        if (refPrice > self.close[i]):
+          self.refPrice = refPrice
+        else:
+          self.refPrice = self.close[i]
 
       if self.hold == 0:
         if len(self.commands) > 0:
@@ -338,7 +342,6 @@ class Trade:
         else: # Not remind fake dump, call buy before real signal
           if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
             self.commands.append(15)
-            refPrice = (self.ma5[i] + self.ma10[i] + self.ma20[i])/3 # Reference for buy
             if (refPrice > self.close[i]):
               self.refPrice = self.close[i]
             else:
@@ -425,12 +428,14 @@ class Trade:
       match command:
         case 1: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Buy at: {:.3f}".format(self.refPrice*1.003)
+          message += "\n" + " - Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
         case 2: # Sell: 0.4~0.5%
           profit_report = 1
           message += "\n" + " - Sell at: {:.3f}".format(currentData["close"]*0.998)
+          if (self.refPrice > currentData["close"]):
+            message += " - {:.3f}".format(self.refPrice*0.998)
         case 3:
           profit_report = 1
           message += "\n" + " - Stoploss reached at: {:.3f}".format(self.stoplossPrice)
@@ -439,7 +444,7 @@ class Trade:
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
         case 5: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.003)
+          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
         case 6:
@@ -469,7 +474,7 @@ class Trade:
         case 15:
           message += "\n" + " - Predict MA10 >= MA20 possible buy"
           stoploss_setting = 1
-          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.003)
+          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
     

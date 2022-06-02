@@ -344,6 +344,10 @@ class Trade:
         if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Warning next downtrend
           self.commands.append(12)
 
+      if self.hold == 0 and SAND_BOX_MODE:
+        if self.ma10[i] < self.ma20[i] and self.ma10[i - 1] >= self.ma20[i - 1]: # Short command
+          self.commands.append(16)
+
       if (self.nextTimeStamp - START_INDEX_TIME_DELTA) < convert_string_to_date(self.stockData.iloc[i]["timestamp"]):
         print ("Processing: ",self.stockName, i, convert_string_to_date(self.stockData.iloc[i]["timestamp"]), "UTC")
         # Push to telegram
@@ -374,7 +378,7 @@ class Trade:
           stoploss_setting = 1
           message += "\n" + " - Buy at: {:.3f}".format(self.refPrice*1.003)
           if (self.refPrice < self.buyPrice):
-            message += "-{:.3f}".format(self.buyPrice*1.002)
+            message += " - {:.3f}".format(self.buyPrice*1.002)
         case 2: # Sell: 0.4~0.5%
           profit_report = 1
           message += "\n" + " - Sell at: {:.3f}".format(currentData["close"]*0.998)
@@ -386,9 +390,9 @@ class Trade:
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
         case 5: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Possible Buy at: {:.3f}".format(self.refPrice*1.003)
+          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.003)
           if (self.refPrice < self.buyPrice):
-            message += "-{:.3f}".format(self.buyPrice*1.002)
+            message += " - {:.3f}".format(self.buyPrice*1.002)
         case 6:
           profit_report = 1
           message += "\n" + " - RSI cross-down below 70"
@@ -417,9 +421,11 @@ class Trade:
         case 15:
           message += "\n" + " - Predict MA10 >= MA20 possible buy"
           stoploss_setting = 1
-          message += "\n" + " - Possible Buy at: {:.3f}".format(self.refPrice*1.003)
+          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.003)
           if (self.refPrice < self.buyPrice):
-            message += "-{:.3f}".format(self.buyPrice*1.002)
+            message += " - {:.3f}".format(self.buyPrice*1.002)
+        case 16:
+          message += "\n" + " - Short signal without hold"
     
     if (stoploss_setting == 1):
       message += "\n" + " - Stoploss at : {:.3f} {:.2f}%".format(self.stoplossPrice, ((self.stoplossPrice/self.buyPrice)-1)*100); # Stoploss ATR
@@ -601,7 +607,7 @@ if __name__ == "__main__":
     schedule_analysis_stock()
     if SAND_BOX_MODE:
       # scheduler.add_job(schedule_analysis_stock, 'interval', minutes=60, timezone=TIME_ZONE) # Recommend run at: 05s of each minute
-      scheduler.add_job(schedule_analysis_stock, 'cron', minute="00", second="30", timezone=TIME_ZONE)  # run on every hour at hh:00:30
+      scheduler.add_job(schedule_analysis_stock, 'cron', minute="01", second="00", timezone=TIME_ZONE)  # run on every hour at hh:01:00
       # scheduler.start()
       
       try:

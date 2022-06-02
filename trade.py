@@ -283,6 +283,9 @@ class Trade:
             else:
               self.refPrice = refPrice
             self.stoplossPrice = self.buyPrice - self.atr[i] # Stoploss based ATR(10)
+          if SAND_BOX_MODE:
+            if self.ma10[i] < self.ma20[i] and self.ma10[i - 1] >= self.ma20[i - 1]: # Short command
+              self.commands.append(16)
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
@@ -343,10 +346,6 @@ class Trade:
       if self.hold == 1 or SAND_BOX_MODE: 
         if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Warning next downtrend
           self.commands.append(12)
-
-      if self.hold == 0 and SAND_BOX_MODE:
-        if self.ma10[i] < self.ma20[i] and self.ma10[i - 1] >= self.ma20[i - 1]: # Short command
-          self.commands.append(16)
 
       if (self.nextTimeStamp - START_INDEX_TIME_DELTA) < convert_string_to_date(self.stockData.iloc[i]["timestamp"]):
         print ("Processing: ",self.stockName, i, convert_string_to_date(self.stockData.iloc[i]["timestamp"]), "UTC")

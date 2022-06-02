@@ -293,6 +293,12 @@ class Trade:
                 self.refPrice = refPrice
               else:
                 self.refPrice = self.close[i]
+            if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Predict short command
+              self.commands.append(17)
+              if (refPrice > self.close[i]):
+                self.refPrice = refPrice
+              else:
+                self.refPrice = self.close[i]
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
@@ -398,7 +404,7 @@ class Trade:
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
         case 5: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
+          message += "\n" + " - Buy again at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
         case 6:
@@ -435,6 +441,11 @@ class Trade:
         case 16:
           message += "\n" + " - Short signal without hold"
           message += "\n" + " - Short at: {:.3f}".format(currentData["close"]*0.998)
+          if (self.refPrice > currentData["close"]):
+            message += " - {:.3f}".format(self.refPrice*0.998)
+        case 17:
+          message += "\n" + " - Predict MA10 < MA20 possible short"
+          message += "\n" + " - Can Short at: {:.3f}".format(currentData["close"]*0.998)
           if (self.refPrice > currentData["close"]):
             message += " - {:.3f}".format(self.refPrice*0.998)
     

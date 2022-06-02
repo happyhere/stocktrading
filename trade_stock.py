@@ -44,6 +44,7 @@ TELEGRAM_CHANNEL_ID = "@botmuabanchungkhoan"
 STOCK_FILE = DIR_PATH+"/Database/ToTheMoon.tls"
 
 NEXT_TIME_FILE = CACHE_PATH + "/NextTimeFile-Stock.txt"
+LOG_PATH = CACHE_PATH + "/trade_stock.log"
 START_TRADE_TIME_ORIGINAL = datetime.datetime.strptime("2022-04-01",'%Y-%m-%d') #GMT+7 Trade time count if day > 15h else day -= 1
 TIME_INTERVAL_DELTA = datetime.timedelta(days = 1) # Write next time search
 TIME_DURATION_DELTA = datetime.timedelta(days = 366)
@@ -53,7 +54,7 @@ if not SERVER_MODE:
   TIME_UTC_DELTA = datetime.timedelta(hours = 0)
   # Dump print to log file
   old_stdout = sys.stdout
-  LOG_FILE = open(CACHE_PATH + "/trade_stock.log","a")
+  LOG_FILE = open(LOG_PATH,"a")
   sys.stdout = LOG_FILE
 else:
   TIME_UTC_DELTA = datetime.timedelta(hours = 7)
@@ -342,6 +343,7 @@ class Trade:
         else: # Not remind fake dump, call buy before real signal
           if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
             self.commands.append(15)
+            self.buyPrice = self.close[i]
             if (refPrice > self.close[i]):
               self.refPrice = self.close[i]
             else:
@@ -444,7 +446,7 @@ class Trade:
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
         case 5: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
+          message += "\n" + " - Buy again at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
         case 6:

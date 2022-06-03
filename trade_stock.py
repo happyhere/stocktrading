@@ -470,12 +470,12 @@ class Trade:
         case 12:
           message += "\n" + " - Predict MA10 < MA20 should sell"
         case 13:
-          message += "\n" + " - MA5 >= MA10 possible to hold"
+          message += "\n" + " - MA5 >= MA10 can hold"
         case 14:
-          message += "\n" + " - Predict MA10 >= MA20 possible hold"
+          message += "\n" + " - Predict MA10 >= MA20 can hold"
         case 15:
-          message += "\n" + " - Predict MA10 >= MA20 possible buy"
           stoploss_setting = 1
+          message += "\n" + " - Predict MA10 >= MA20 can buy"
           message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)

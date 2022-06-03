@@ -293,12 +293,14 @@ class Trade:
                 self.refPrice = refPrice
               else:
                 self.refPrice = self.close[i]
+              self.stoplossPrice = self.buyPrice + self.atr[i] # Stoploss based ATR(10)
             if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Predict short command
               self.commands.append(17)
               if (refPrice > self.close[i]):
                 self.refPrice = refPrice
               else:
                 self.refPrice = self.close[i]
+              self.stoplossPrice = self.buyPrice + self.atr[i] # Stoploss based ATR(10)
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
@@ -356,7 +358,7 @@ class Trade:
         if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
 
-      if self.hold == 1 or SAND_BOX_MODE: 
+      if self.hold == 1: 
         if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Warning next downtrend
           self.commands.append(12)
 
@@ -429,23 +431,25 @@ class Trade:
         case 12:
           message += "\n" + " - Predict MA10 < MA20 should sell"
         case 13:
-          message += "\n" + " - MA5 >= MA10 possible to hold"
+          message += "\n" + " - MA5 >= MA10 can hold"
         case 14:
-          message += "\n" + " - Predict MA10 >= MA20 possible hold"
+          message += "\n" + " - Predict MA10 >= MA20 can hold"
         case 15:
-          message += "\n" + " - Predict MA10 >= MA20 possible buy"
           stoploss_setting = 1
+          message += "\n" + " - Predict MA10 >= MA20 can buy"
           message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
         case 16:
+          stoploss_setting = 1
           message += "\n" + " - Short signal without hold"
           message += "\n" + " - Short at: {:.3f}".format(currentData["close"]*0.998)
           if (self.refPrice > currentData["close"]):
             message += " - {:.3f}".format(self.refPrice*0.998)
         case 17:
-          message += "\n" + " - Predict MA10 < MA20 possible short"
-          message += "\n" + " - Can Short at: {:.3f}".format(currentData["close"]*0.998)
+          stoploss_setting = 1
+          message += "\n" + " - Predict MA10 < MA20 can short"
+          message += "\n" + " - Can Short at: {:.2f}".format(currentData["close"]*0.998)
           if (self.refPrice > currentData["close"]):
             message += " - {:.3f}".format(self.refPrice*0.998)
     

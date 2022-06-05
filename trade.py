@@ -107,14 +107,20 @@ def convert_string_to_date(dateStr):
   return datetime.datetime.strptime(dateStr,'%Y-%m-%dT%H:%M:%S.%fZ')
 
 def send_message_telegram(message):
-  try:
-    telegram_notify = telegram.Bot(TELEGRAM_API_ID)
-    telegram_notify.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=message,
-                            parse_mode='Markdown')
-    print("Sent a message to Telegram")
-    time.sleep(1)
-  except Exception as ex:
-    print(ex)
+  for index in range(1,3):
+    try:
+      telegram_notify = telegram.Bot(TELEGRAM_API_ID)
+      telegram_notify.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=message,
+                              parse_mode='Markdown')
+      print("Sent a message to Telegram")
+      time.sleep(1.5)
+      break
+    except Exception as ex:
+      print("Telegram Exception:", ex)
+      if index == 3:
+        raise Exception("Telegram Exception after 3 tries: " + str(ex))
+      print("Retry after 10 seconds")
+      time.sleep(10)
 
 def read_stock_list():
   stockFile = open(STOCK_FILE, "r")
@@ -621,8 +627,8 @@ def schedule_analysis_stock():
       print ("------ EOD:", currentTime, "------")
       send_message_telegram("-------------- EOD: " + currentTime.strftime("%d, %b %Y") + " --------------")
     except Exception as ex:
-      send_message_telegram("Something wrong: " + str(ex))
       print("Something wrong: ", ex)
+      send_message_telegram("Something wrong: " + str(ex))
       # scheduler.shutdown()
   else:
     print("Please run again after 7am, next time is", nextTimeStamp)

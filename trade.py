@@ -295,6 +295,7 @@ class Trade:
           if SAND_BOX_MODE:
             if self.ma10[i] < self.ma20[i] and self.ma10[i - 1] >= self.ma20[i - 1]: # Short command
               self.commands.append(16)
+              self.buyPrice = self.close[i]
               if (refPrice > self.close[i]):
                 self.refPrice = refPrice
               else:
@@ -302,6 +303,7 @@ class Trade:
               self.stoplossPrice = self.buyPrice + self.atr[i] # Stoploss based ATR(10)
             if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Predict short command
               self.commands.append(17)
+              self.buyPrice = self.close[i]
               if (refPrice > self.close[i]):
                 self.refPrice = refPrice
               else:

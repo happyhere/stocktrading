@@ -597,7 +597,7 @@ if __name__ == "__main__":
       LOG_FILE.close()
 
   # Windows sleep this task so using Window Task Schedule
-  # scheduler.add_job(schedule_analysis_stock, 'cron', day_of_week="mon-fri", hour="15", minute="30", timezone=TIME_ZONE, misfire_grace_time=None)  # run on Monday to Friday at 15h30
+  # scheduler.add_job(schedule_analysis_stock, 'cron', day_of_week="mon-fri", hour="20", minute="00", timezone=TIME_ZONE, misfire_grace_time=None)  # run on Monday to Friday at 15h30
   # try:
   #     scheduler.start()
   # except (KeyboardInterrupt, SystemExit):

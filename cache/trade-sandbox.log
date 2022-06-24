@@ -1,0 +1,194 @@
+------ Day: 2022-06-01 21:53:46.285711 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-01 21:53:45.749145 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 13:00:00 UTC
+------ EOD: 2022-06-01 21:53:46.285711 ------
+Sent a message to Telegram
+------ Day: 2022-06-01 22:00:30.013230 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-01 22:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 14:00:00 UTC
+------ EOD: 2022-06-01 22:00:30.013230 ------
+Sent a message to Telegram
+------ Day: 2022-06-01 23:00:30.016663 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-01 23:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 15:00:00 UTC
+------ EOD: 2022-06-01 23:00:30.016663 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 00:00:30.016773 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 00:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 16:00:00 UTC
+------ EOD: 2022-06-02 00:00:30.016773 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 01:00:30.008449 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 01:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 17:00:00 UTC
+------ EOD: 2022-06-02 01:00:30.008449 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 02:00:30.006000 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 02:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 18:00:00 UTC
+------ EOD: 2022-06-02 02:00:30.006000 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 03:00:30.012674 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 03:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 19:00:00 UTC
+------ EOD: 2022-06-02 03:00:30.012674 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 04:00:30.012696 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 04:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 20:00:00 UTC
+------ EOD: 2022-06-02 04:00:30.012696 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 05:00:30.013752 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 05:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 21:00:00 UTC
+------ EOD: 2022-06-02 05:00:30.013752 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 06:00:30.006522 ------
+Sent a message to Telegram
+Sent a message to Telegram
+Something wrong:  binance GET https://api.binance.com/api/v3/klines?interval=1h&limit=366&symbol=BTCUSDT
+------ Day: 2022-06-02 06:57:46.317707 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 06:57:43.223802 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 22:00:00 UTC
+------ EOD: 2022-06-02 06:57:46.317707 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 06:58:46.057781 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 06:58:45.529514 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 22:00:00 UTC
+------ EOD: 2022-06-02 06:58:46.057781 ------
+Sent a message to Telegram
+Program Exception: Is it related Telegram? Error validating expression '60': the last value (60) is higher than the maximum value (59)
+------ Day: 2022-06-02 07:16:10.894158 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:16:10.381941 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:16:10.894158 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:16:42.721723 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:16:42.218291 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:16:42.721723 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:29:35.918730 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:29:35.402955 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:29:35.918730 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:31:15.094154 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:31:14.551080 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:31:15.094154 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:35:26.646180 ------
+2022-06-02 07:35:26.092592
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:35:26.092592 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:35:26.646180 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:35:36.817005 ------
+2022-06-02 07:35:36.252473
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:35:36.252473 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:35:36.817005 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:37:24.305758 ------
+C:\Users\TestPC\Desktop\List\Ccxt/cache/NextTimeFile-Sandbox.txt
+2022-06-02 07:37:23.694720
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:37:23.694720 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:37:24.305758 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:38:03.680026 ------
+Hello
+C:\Users\TestPC\Desktop\List\Ccxt/cache/NextTimeFile-Sandbox.txt
+2022-06-02 07:38:03.183622
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:38:03.183622 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:38:03.680026 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:39:03.702288 ------
+Hello
+C:\Users\TestPC\Desktop\List\Ccxt/cache/NextTimeFile-Sandbox.txt
+Hello2
+2022-06-02 07:39:02.962794
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:39:02.962794 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:39:03.702288 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:39:15.195467 ------
+Hello
+C:\Users\TestPC\Desktop\List\Ccxt/cache/NextTimeFile-Sandbox.txt
+Hello2
+2022-06-02 07:39:14.744232
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:39:14.744232 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:39:15.195467 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 07:49:09.427770 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 07:49:08.831523 UTC+7
+Processing:  BTC/USDT 364 2022-06-01 23:00:00 UTC
+------ EOD: 2022-06-02 07:49:09.427770 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 08:01:00.011314 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 08:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-02 00:00:00 UTC
+------ EOD: 2022-06-02 08:01:00.011314 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 08:56:22.676627 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 08:56:22.057099 UTC+7
+Processing:  BTC/USDT 364 2022-06-02 00:00:00 UTC
+------ EOD: 2022-06-02 08:56:22.676627 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 09:01:00.012660 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 09:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-02 01:00:00 UTC
+------ EOD: 2022-06-02 09:01:00.012660 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 09:37:35.306184 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 09:37:34.466572 UTC+7
+Processing:  BTC/USDT 364 2022-06-02 01:00:00 UTC
+------ EOD: 2022-06-02 09:37:35.306184 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 10:01:00.007965 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 10:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-02 02:00:00 UTC
+------ EOD: 2022-06-02 10:01:00.007965 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 11:01:00.072819 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 11:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-02 03:00:00 UTC
+------ EOD: 2022-06-02 11:01:00.072819 ------
+Sent a message to Telegram
+------ Day: 2022-06-02 12:01:00.037935 ------
+Sent a message to Telegram
+#BTC/USDT Day:  2022-06-02 12:00:02 UTC+7
+Processing:  BTC/USDT 364 2022-06-02 04:00:00 UTC
+------ EOD: 2022-06-02 12:01:00.037935 ------
+Sent a message to Telegram

@@ -29,9 +29,9 @@ if not isExist:
   os.makedirs(cachePath)
 
 # Dump print to log file
-old_stdout = sys.stdout
-LOG_FILE = open(cachePath + "/trade.log","a")
-sys.stdout = LOG_FILE
+# old_stdout = sys.stdout
+# LOG_FILE = open(cachePath + "/trade.log","a")
+# sys.stdout = LOG_FILE
 
 TELEGRAM_API_ID = "5249469985:AAF6_SyVBvigBM-s3EyghW63l64_CCbaIzw"
 TELEGRAM_CHANNEL_ID = "@bottradecryptocoin"
@@ -415,8 +415,8 @@ def schedule_analysis_stock():
     try:
       send_message_telegram("-------------- Day: " + currentTime.strftime("%d, %b %Y") + " --------------")
       for stockName in stockList:
-        if stockName != "BTC/USDT" and SAND_BOX_MODE == 1:
-          continue
+        if stockName != "BTC/USDT" and SAND_BOX_MODE == 0:
+            continue
         # print("Pair: " + stockName)
         # respect rate limit
         time.sleep (exchange.rateLimit / 1000)
@@ -440,11 +440,18 @@ def schedule_analysis_stock():
 if __name__ == "__main__":
   try:
     # Run first time if needed
-    schedule_analysis_stock()
+    # schedule_analysis_stock()
+    stock_data = get_historical_data("SOL/USDT", TIME_INTERVAL_STR)
+    # analysis_stock(stockName, stock_data, nextTimeStamp)
+    candle = abstract.CDLMARUBOZU(stock_data)
+    for i in range (1, len(stock_data)-1):
+        if candle.iloc[i] != 0:
+            print(candle.iloc[i])
+            print(stock_data.iloc[i]["timestamp"])
 
     # Program ended, turn off sys log file mode
-    sys.stdout = old_stdout
-    LOG_FILE.close()
+    # sys.stdout = old_stdout
+    # LOG_FILE.close()
 
   except Exception as ex:
     print("Program Exception: Is it related Telegram?", ex)

@@ -268,7 +268,7 @@ class Trade:
     for i in range(self.startIndex, (self.dataLength-1)): # Crypto: don't use last value
       if i < 26: # Condition to fit EMA26 has value
         continue
-      self.commands = [] # 0: Do nothing, 1: Buy, 2: Sell, 3-4: Stoploss, 5: Increase stoploss, 6: Buy if missing, 7-11: Indicators 
+      self.commands = [] # 0: Do nothing, 1: Buy, 2: Sell, 3-4: Stoploss, 5: Increase stoploss, 6: Buy if missing, 7-11: Indicators
       # Caculate prediction next day MACD, refPrice
       nextEMA12 = self.close[i]*(2/(12+1)) + self.ema12[i]*(1-(2/(12+1)))
       nextEMA26 = self.close[i]*(2/(26+1)) + self.ema26[i]*(1-(2/(26+1)))
@@ -335,7 +335,7 @@ class Trade:
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
-        if self.low[i] < self.stoplossPrice and self.stoplossPrice != 0 and len(self.commands) == 0:
+        if self.low[i] < self.stoplossPrice and self.stoplossPrice != 0 and len(self.commands) == 0 and self.close[i-1]>self.stoplossPrice:
           self.commands.append(3)
           # self.hold = 0
 
@@ -346,7 +346,7 @@ class Trade:
           self.stoplossPrice = self.buyPrice
 
         # Buy if have a chance, buyPrice <-> close: ATR10
-        if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 2):
+        if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 2) and self.close[i]>((self.buyPrice - self.atr[i])):
           self.stoplossPrice = self.buyPrice - self.atr[i] # If rebuy signal then down stoploss
           self.commands.append(5)
 
@@ -355,7 +355,8 @@ class Trade:
         if (self.rsi[i] < 70 and self.rsi[i-1] >= 70) or (self.rsi[i] >= 30 and self.rsi[i-1] < 30):
           self.commands.append(6)
 
-        if self.ma10[i] < self.ma20[i] and self.ma10[i-1] >= self.ma20[i-1]:
+        if (self.ma10[i] < self.ma20[i] and self.ma10[i-1] >= self.ma20[i-1]) \
+            or (self.ma10[i] >= self.ma20[i] and self.ma10[i-1] < self.ma20[i-1]):
           self.commands.append(7)
 
         if self.change[i] <= -8.5:
@@ -460,13 +461,16 @@ class Trade:
             message += " - {:.3f}".format(self.buyPrice*1.002)
         case 6:
           profit_report = 1
-          if self.rsi[i-1] > 70:
+          if self.rsi[self.processIndex-1] > 70:
             message += "\n" + " - RSI warning signal"
-          elif self.rsi[i-1] < 30:
+          elif self.rsi[self.processIndex-1] < 30:
             message += "\n" + " - RSI good signal"
         case 7:
           profit_report = 1
-          message += "\n" + " - MA10 < MA20 warning"
+          if self.ma10[self.processIndex] >= self.ma20[self.processIndex]:
+            message += "\n" + " - MA10 cross-up MA20 good"
+          elif self.ma10[self.processIndex] < self.ma20[self.processIndex]:
+            message += "\n" + " - MA10 cross-down MA20 warning"
         case 8:
           profit_report = 1
           message += "\n" + " - Bar price drop {:.2f}%".format(self.change[self.processIndex])

@@ -339,7 +339,7 @@ class Trade:
       nextMacdHistogram = nextMacd - nextMacdSignal
       refPrice = (self.ma5[i] + self.ma10[i])/2 # Reference for buy/sell
       # If the MACD histogram cross 0 line upward
-      if self.macdHistogram[i] >= 0 and self.macdHistogram[i-1] < 0 and self.hold == 0:        
+      if self.macdHistogram[i] >= 0 and self.macdHistogram[i-1] < 0 and self.hold == 0:
         self.commands.append(1)
         self.buyPrice = self.close[i]
         self.hold = 1
@@ -380,7 +380,7 @@ class Trade:
 
       if self.hold == 1: 
         # Stoploss warning trigger your balance
-        if self.low[i] < self.stoplossPrice and self.stoplossPrice != 0 and len(self.commands) == 0:
+        if self.low[i] < self.stoplossPrice and self.stoplossPrice != 0 and len(self.commands) == 0 and self.close[i-1]>self.stoplossPrice:
           self.commands.append(3)
           # self.hold = 0
 
@@ -391,16 +391,17 @@ class Trade:
           self.stoplossPrice = self.buyPrice
 
         # Buy if have a chance, buyPrice <-> close: ATR10
-        if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 2):
+        if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 2) and self.close[i]>((self.buyPrice - self.atr[i])):
           self.stoplossPrice = self.buyPrice - self.atr[i] # If rebuy signal then down stoploss
           self.commands.append(5)
-      
+
       if self.hold == 1 or len(self.commands) > 0:
         # Cross RSI, MA1020, MA, -8.5% change
         if (self.rsi[i] < 70 and self.rsi[i-1] >= 70) or (self.rsi[i] >= 30 and self.rsi[i-1] < 30):
           self.commands.append(6)
 
-        if self.ma10[i] < self.ma20[i] and self.ma10[i-1] >= self.ma20[i-1]:
+        if (self.ma10[i] < self.ma20[i] and self.ma10[i-1] >= self.ma20[i-1]) \
+            or (self.ma10[i] >= self.ma20[i] and self.ma10[i-1] < self.ma20[i-1]):
           self.commands.append(7)
 
         if self.change[i] <= -5:
@@ -497,13 +498,16 @@ class Trade:
             message += " - {:.3f}".format(self.buyPrice*1.002)
         case 6:
           profit_report = 1
-          if self.rsi[i-1] > 70:
+          if self.rsi[self.processIndex-1] > 70:
             message += "\n" + " - RSI warning signal"
-          elif self.rsi[i-1] < 30:
+          elif self.rsi[self.processIndex-1] < 30:
             message += "\n" + " - RSI good signal"
         case 7:
           profit_report = 1
-          message += "\n" + " - MA10 < MA20 warning"
+          if self.ma10[self.processIndex] >= self.ma20[self.processIndex]:
+            message += "\n" + " - MA10 cross-up MA20 good"
+          elif self.ma10[self.processIndex] < self.ma20[self.processIndex]:
+            message += "\n" + " - MA10 cross-down MA20 warning"
         case 8:
           profit_report = 1
           message += "\n" + " - Bar price drop {:.2f}%".format(self.change[self.processIndex])

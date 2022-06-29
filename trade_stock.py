@@ -230,16 +230,25 @@ class Trade:
     self.ma5 = []
     self.ma10 = []
     self.ma20 = []
-    self.rsi = []
-    self.macdHistogram = []
+    self.rsi = [] # 30 - 70
     self.change = []
     self.atr = []
+    # MACD future
+    self.macdHistogram = []
+    self.ema12 = []
+    self.ema26 = []
+    self.macdSignal = []
     # shooting star, hanging man, evening star, Marubozu < 0, CDLADVANCEBLOCK, CDLHARAMI < 0, CDLHIGHWAVE < 0
     self.shootingStar = []
     self.hangingMan = []
     self.eveningStar = []
-    self.marubozu = []
     self.advanceBlock = []
+    # Buy candlesticks
+    self.hammer = []
+    self.invertedHammer = []
+    self.morningStar = []
+    # Mix signal
+    self.marubozu = []
     self.harami = []
     self.highWave = []
     # Process time by time
@@ -293,31 +302,44 @@ class Trade:
     self.ma10 = abstract.SMA(self.stockData, timeperiod=10)
     self.ma20 = abstract.SMA(self.stockData, timeperiod=20)
     self.rsi = abstract.RSI(self.stockData, timeperiod=14)
-    self.macdHistogram = abstract.MACD(self.stockData).macdhist
     self.change = abstract.ROC(self.stockData, timeperiod=1)
     self.atr = abstract.ATR(self.stockData, timeperiod=10)
+    # MACD
+    self.macdHistogram = abstract.MACD(self.stockData).macdhist
+    self.macdSignal = abstract.MACD(self.stockData).macdsignal
+    self.ema12 = abstract.EMA(self.stockData, timeperiod=12)
+    self.ema26 = abstract.EMA(self.stockData, timeperiod=26)
+    # Downtrend
     self.shootingStar = abstract.CDLSHOOTINGSTAR(self.stockData)
     self.hangingMan = abstract.CDLHANGINGMAN(self.stockData)
     self.eveningStar = abstract.CDLEVENINGSTAR(self.stockData)
-    self.marubozu = abstract.CDLMARUBOZU(self.stockData)
     self.advanceBlock = abstract.CDLADVANCEBLOCK(self.stockData)
+    # Mix
+    self.marubozu = abstract.CDLMARUBOZU(self.stockData)
     self.harami = abstract.CDLHARAMI(self.stockData)
     self.highWave = abstract.CDLHIGHWAVE(self.stockData)
+    # Uptrend
+    self.hammer = abstract.CDLHAMMER(self.stockData)
+    self.invertedHammer = abstract.CDLINVERTEDHAMMER(self.stockData)
+    self.morningStar=abstract.CDLMORNINGSTAR(self.stockData)
 
   def analysis_stock(self):
     """ Analysis one stock
     """
     print("#" + self.stockName + " Day: " , self.nextTimeStamp)
     for i in range(self.startIndex, self.dataLength): # Crypto: don't use last value
-      if i < 20: # Condition to fit MA20 has value
+      if i < 26: # Condition to fit EMA26 has value
         continue
       self.commands = [] # 0: Do nothing, 1: Buy, 2: Sell, 3-4: Stoploss, 5: Increase stoploss, 6: Buy if missing, 7-11: Indicators
-      # Caculate prediction next day MA10 vs MA20, refPrice
-      nextMA10 = (self.ma10[i]*10 - self.close[i-9] + self.close[i])/10
-      nextMA20 = (self.ma20[i]*20 - self.close[i-19] + self.close[i])/20
-      refPrice = (self.ma5[i] + self.ma10[i] + self.ma20[i])/3 # Reference for buy/sell
-      # If the MA10 crosses MA20 line upward
-      if self.ma10[i] > self.ma20[i] and self.ma10[i - 1] <= self.ma20[i - 1] and self.hold == 0: # and self.macdHistogram[i] > -0.1
+      # Caculate prediction next day MACD, refPrice
+      nextEMA12 = self.close[i]*(2/(12+1)) + self.ema12[i]*(1-(2/(12+1)))
+      nextEMA26 = self.close[i]*(2/(26+1)) + self.ema26[i]*(1-(2/(26+1)))
+      nextMacd = nextEMA12 - nextEMA26
+      nextMacdSignal = nextMacd*(2/(26+1)) + self.macdSignal[i]*(1-(2/(26+1)))
+      nextMacdHistogram = nextMacd - nextMacdSignal
+      refPrice = (self.ma5[i] + self.ma10[i])/2 # Reference for buy/sell
+      # If the MACD histogram cross 0 line upward
+      if self.macdHistogram[i] >= 0 and self.macdHistogram[i-1] < 0 and self.hold == 0:        
         self.commands.append(1)
         self.buyPrice = self.close[i]
         self.hold = 1
@@ -331,7 +353,7 @@ class Trade:
         # else:
         #   self.stoplossPrice = self.buyPrice*0.915
       # The other way around
-      elif self.ma10[i] < self.ma20[i] and self.ma10[i - 1] >= self.ma20[i - 1] and self.hold == 1 and len(self.commands) == 0:
+      elif self.macdHistogram[i] < 0 and self.macdHistogram[i-1] >= 0 and self.hold == 1 and len(self.commands) == 0:
         self.commands.append(2)
         self.hold = 0
         self.stoplossPrice = 0
@@ -344,10 +366,10 @@ class Trade:
         if len(self.commands) > 0:
           if self.ma5[i] >= self.ma10[i]: # Possible to hold on Sell
             self.commands.append(13)
-          if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
+          if nextMacdHistogram >= 0 and self.macdHistogram[i] < 0: # Warning next uptrend
             self.commands.append(14)
-        else: # Not remind fake dump, call buy before real signal
-          if nextMA10 >= nextMA20 and self.ma10[i] < self.ma20[i]: # Warning next uptrend
+        else: # Detect early pump, call buy before real signal
+          if nextMacdHistogram >= 0 and self.macdHistogram[i] < 0: # Warning next uptrend
             self.commands.append(15)
             self.buyPrice = self.close[i]
             if (refPrice > self.close[i]):
@@ -370,35 +392,53 @@ class Trade:
 
         # Buy if have a chance, buyPrice <-> close: ATR10
         if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 2):
+          self.stoplossPrice = self.buyPrice - self.atr[i] # If rebuy signal then down stoploss
           self.commands.append(5)
       
       if self.hold == 1 or len(self.commands) > 0:
-        # Cross RSI, MCDA, MA, -5% change
-        if self.rsi[i] < 70 and self.rsi[i - 1] >= 70:
+        # Cross RSI, MA1020, MA, -8.5% change
+        if (self.rsi[i] < 70 and self.rsi[i-1] >= 70) or (self.rsi[i] >= 30 and self.rsi[i-1] < 30):
           self.commands.append(6)
 
-        if self.macdHistogram[i] < 0 and self.macdHistogram[i - 1] >= 0:
+        if self.ma10[i] < self.ma20[i] and self.ma10[i-1] >= self.ma20[i-1]:
           self.commands.append(7)
 
         if self.change[i] <= -5:
           self.commands.append(8)
 
-        self.candlestick = ""
+        self.candlestickUp = ""
+        self.candlestickDown = ""
+        # Downtrend
         if self.shootingStar[i] != 0:
-          self.candlestick += "shootingStar "
+          self.candlestickDown += "shootingStar "
         if self.hangingMan[i] != 0:
-          self.candlestick += "hangingMan "
+          self.candlestickDown += "hangingMan "
         if self.eveningStar[i] != 0:
-          self.candlestick += "eveningStar "
-        if self.marubozu[i] < 0:
-          self.candlestick += "marubozu "
+          self.candlestickDown += "eveningStar "
         if self.advanceBlock[i] != 0:
-          self.candlestick += "advanceBlock "
+          self.candlestickDown += "advanceBlock "
+        # Uptrend
+        if self.invertedHammer[i] != 0:
+          self.candlestickUp += "invertedHammer "
+        if self.hammer[i] != 0:
+          self.candlestickUp += "hammer "
+        if self.morningStar[i] != 0:
+          self.candlestickUp += "morningStar "
+        # Mix
+        if self.marubozu[i] < 0:
+          self.candlestickDown += "marubozu "
+        elif self.marubozu[i] > 0:
+          self.candlestickUp += "marubozu "
         if self.harami[i] < 0:
-          self.candlestick += "harami "
+          self.candlestickDown += "harami "
+        elif self.harami[i] > 0:
+          self.candlestickUp += "harami "
         if self.highWave[i] < 0:
-          self.candlestick += "highWave "
-        if self.candlestick != "":
+          self.candlestickDown += "highWave "
+        elif self.highWave[i] > 0:
+          self.candlestickUp += "highWave "
+
+        if self.candlestickUp != "" or self.candlestickDown != "":
           self.commands.append(9)
         
         if len(self.volumeProfiles) > 0:
@@ -411,7 +451,7 @@ class Trade:
         if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
  
-        if nextMA10 < nextMA20 and self.ma10[i] >= self.ma20[i]: # Warning next downtrend
+        if nextMacdHistogram < 0 and self.macdHistogram[i] >= 0: # Warning next downtrend
           self.commands.append(12)
 
       if (self.nextTimeStamp - TIME_INTERVAL_DELTA) < convert_to_datetime(self.stockData.iloc[i]):
@@ -457,16 +497,22 @@ class Trade:
             message += " - {:.3f}".format(self.buyPrice*1.002)
         case 6:
           profit_report = 1
-          message += "\n" + " - RSI cross-down below 70"
+          if self.rsi[i-1] > 70:
+            message += "\n" + " - RSI warning signal"
+          elif self.rsi[i-1] < 30:
+            message += "\n" + " - RSI good signal"
         case 7:
           profit_report = 1
-          message += "\n" + " - Histogram cross-down below 0"
+          message += "\n" + " - MA10 < MA20 warning"
         case 8:
           profit_report = 1
           message += "\n" + " - Bar price drop {:.2f}%".format(self.change[self.processIndex])
         case 9:
           profit_report = 1
-          message += "\n" + " - Bar is " + self.candlestick
+          if self.candlestickUp != "":
+            message += "\n" + " - Bar+ : " + self.candlestickUp
+          if self.candlestickDown != "":
+            message += "\n" + " - Bar- : " + self.candlestickDown
         case 10:
           profit_report = 1
           message += "\n" + " - Near the support/resistance zone"
@@ -474,14 +520,14 @@ class Trade:
           profit_report = 1
           message += "\n" + " - MA5 < MA10 warning hold"
         case 12:
-          message += "\n" + " - Predict MA10 < MA20 should sell"
+          message += "\n" + " - Predict MACD < 0 should sell"
         case 13:
-          message += "\n" + " - MA5 >= MA10 can hold"
+          message += "\n" + " - MA5 > MA10 can hold"
         case 14:
-          message += "\n" + " - Predict MA10 >= MA20 can hold"
+          message += "\n" + " - Predict MACD > 0 can hold"
         case 15:
           stoploss_setting = 1
-          message += "\n" + " - Predict MA10 >= MA20 can buy"
+          message += "\n" + " - Predict MACD > 0 can buy"
           message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)

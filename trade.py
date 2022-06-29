@@ -275,9 +275,9 @@ class Trade:
       nextMacd = nextEMA12 - nextEMA26
       nextMacdSignal = nextMacd*(2/(26+1)) + self.macdSignal[i]*(1-(2/(26+1)))
       nextMacdHistogram = nextMacd - nextMacdSignal
-      refPrice = (self.ma5[i] + self.ma10[i] + self.ma20[i])/3 # Reference for buy/sell
+      refPrice = (self.ma5[i] + self.ma10[i])/2 # Reference for buy/sell
       # If the MACD histogram cross 0 line upward
-      if self.macdHistogram[i] >= 0 and self.macdHistogram[i-1] < 0 and self.hold == 0: # and self.macdHistogram[i] > -0.005 
+      if self.macdHistogram[i] >= 0 and self.macdHistogram[i-1] < 0 and self.hold == 0:
         self.commands.append(1)
         self.buyPrice = self.close[i]
         self.hold = 1
@@ -486,12 +486,12 @@ class Trade:
         case 12:
           message += "\n" + " - Predict MACD < 0 should sell"
         case 13:
-          message += "\n" + " - MA5 >= MA10 can hold"
+          message += "\n" + " - MA5 > MA10 can hold"
         case 14:
-          message += "\n" + " - Predict MACD >= 0 can hold"
+          message += "\n" + " - Predict MACD > 0 can hold"
         case 15:
           stoploss_setting = 1
-          message += "\n" + " - Predict MACD >= 0 can buy"
+          message += "\n" + " - Predict MACD > 0 can buy"
           message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)

@@ -607,7 +607,7 @@ def schedule_analysis_stock():
   nextTimeStamp = read_next_time_stamp()
   if currentTime >= (nextTimeStamp+TIME_PROTECT_DELTA):
     try:
-      send_message_telegram("-------------- Day: " + currentTime.strftime("%d, %b %Y") + " --------------")
+      send_message_telegram("------- Day: " + currentTime.strftime("%d, %b %Y") + " -------")
       for stockName in stockList:
         # print("Pair: " + stockName)
         stockTrade = Trade(stockName, currentTime, nextTimeStamp)
@@ -620,7 +620,7 @@ def schedule_analysis_stock():
         nextTimeStamp = lastTimeStamp + TIME_INTERVAL_DELTA
       write_next_time_stamp(nextTimeStamp)
       print ("------ EOD:", currentTime, "------")
-      send_message_telegram("-------------- EOD: " + currentTime.strftime("%d, %b %Y") + " --------------")
+      send_message_telegram("------- EOD: " + currentTime.strftime("%d, %b %Y") + " -------")
     except Exception as ex:
       print("Something wrong: ", ex)
       send_message_telegram("Something wrong: " + str(ex))

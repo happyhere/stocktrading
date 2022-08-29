@@ -524,10 +524,13 @@ class Trade:
           profit_report = 1
           message += "\n" + " - MA5 < MA10 warning hold"
         case 12:
+          profit_report = 1
           message += "\n" + " - Predict MACD < 0 should sell"
         case 13:
+          profit_report = 1
           message += "\n" + " - MA5 > MA10 can hold"
         case 14:
+          profit_report = 1
           message += "\n" + " - Predict MACD > 0 can hold"
         case 15:
           stoploss_setting = 1

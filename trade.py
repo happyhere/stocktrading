@@ -638,12 +638,12 @@ class Trade:
     sortedVolumePeaks = dict(sorted(volumePeaks.items(), key=lambda item: item[1]))
     reverseVolumePeaks = dict(reversed(sortedVolumePeaks.items()))
 
+    volumePeaks = {A:N for (A,N) in [x for x in reverseVolumePeaks.items()][:4]}
+
     lowest = min(volumePeaks, key=volumePeaks.get)
 
-    for i in range(0, len(peaks)):
-      volumePeaks[xr[peaks[i]]] /= volumePeaks[lowest]
-
-    volumePeaks = {A:N for (A,N) in [x for x in reverseVolumePeaks.items()][:4]}
+    for name in volumePeaks:
+      volumePeaks[name] /= volumePeaks[lowest]
     #   if kdy[peaks[pocIndex]] < kdy[peaks[i]]:
     #     pocIndex = i
     # if pocIndex >= 0:

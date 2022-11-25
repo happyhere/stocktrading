@@ -545,7 +545,7 @@ class Trade:
       message += "\n" + " - Profit now: {:.2f}%".format((currentData["close"]-self.buyPrice)/self.buyPrice*100) #*0.996
 
     for key in self.volumeProfiles:
-      message += "\n" + " - Zone {:.3f}: {:.0f}T".format(key, self.volumeProfiles[key])
+      message += "\n" + " - Zone {:.3f}: {:.3f}T".format(key, self.volumeProfiles[key])
 
     message += "\n" + " - Close at : " + "{:.3f}".format(currentData["close"]) \
             +  "\n" + " - Value at MA5: " + "{:.3f}".format(self.ma5[self.processIndex]) \
@@ -584,12 +584,12 @@ class Trade:
     sortedVolumePeaks = dict(sorted(volumePeaks.items(), key=lambda item: item[1]))
     reverseVolumePeaks = dict(reversed(sortedVolumePeaks.items()))
 
+    volumePeaks = {A:N for (A,N) in [x for x in reverseVolumePeaks.items()][:4]}
+
     lowest = min(volumePeaks, key=volumePeaks.get)
 
-    for i in range(0, len(peaks)):
-      volumePeaks[xr[peaks[i]]] /= volumePeaks[lowest]
-
-    volumePeaks = {A:N for (A,N) in [x for x in reverseVolumePeaks.items()][:4]}
+    for name in volumePeaks:
+      volumePeaks[name] /= volumePeaks[lowest]
     #   if kdy[peaks[pocIndex]] < kdy[peaks[i]]:
     #     pocIndex = i
     # if pocIndex >= 0:

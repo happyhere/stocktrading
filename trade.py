@@ -437,78 +437,77 @@ class Trade:
     profit_report = 0
     stoploss_setting = 0
     for command in self.commands:
-      match command:
-        case 1: # Buy: +0.2%
-          stoploss_setting = 1
-          message += "\n" + " - Buy at: {:.3f}".format(self.refPrice*1.002)
-          if (self.refPrice < self.buyPrice):
-            message += " - {:.3f}".format(self.buyPrice*1.002)
-        case 2: # Sell: 0.4~0.5%
-          profit_report = 1
-          message += "\n" + " - Sell at: {:.3f}".format(currentData["close"]*0.998)
-          if (self.refPrice > currentData["close"]):
-            message += " - {:.3f}".format(self.refPrice*0.998)
-        case 3:
-          profit_report = 1
-          message += "\n" + " - Stoploss reached at: {:.3f}".format(self.stoplossPrice)
-        case 4:
+      if command == 1: # Buy: +0.2%
+        stoploss_setting = 1
+        message += "\n" + " - Buy at: {:.3f}".format(self.refPrice*1.002)
+        if (self.refPrice < self.buyPrice):
+          message += " - {:.3f}".format(self.buyPrice*1.002)
+      if command == 2: # Sell: 0.4~0.5%
+        profit_report = 1
+        message += "\n" + " - Sell at: {:.3f}".format(currentData["close"]*0.998)
+        if (self.refPrice > currentData["close"]):
+          message += " - {:.3f}".format(self.refPrice*0.998)
+      if command == 3:
+        profit_report = 1
+        message += "\n" + " - Stoploss reached at: {:.3f}".format(self.stoplossPrice)
+      if command == 4:
           profit_report = 1
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
-        case 5: # Buy: +0.2%
+      if command == 5: # Buy: +0.2%
           stoploss_setting = 1
           message += "\n" + " - Rebuy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
-        case 6:
+      if command == 6:
           profit_report = 1
           if self.rsi[self.processIndex-1] > 70:
             message += "\n" + " - RSI warning signal"
           elif self.rsi[self.processIndex-1] < 30:
             message += "\n" + " - RSI good signal"
-        case 7:
+      if command == 7:
           profit_report = 1
           if self.ma10[self.processIndex] >= self.ma20[self.processIndex]:
             message += "\n" + " - MA10 cross-up MA20 good"
           elif self.ma10[self.processIndex] < self.ma20[self.processIndex]:
             message += "\n" + " - MA10 cross-down MA20 warning"
-        case 8:
+      if command == 8:
           profit_report = 1
           message += "\n" + " - Bar price drop {:.2f}%".format(self.change[self.processIndex])
-        case 9:
+      if command == 9:
           profit_report = 1
           if self.candlestickUp != "":
             message += "\n" + " - Bar+ : " + self.candlestickUp
           if self.candlestickDown != "":
             message += "\n" + " - Bar- : " + self.candlestickDown
-        case 10:
+      if command == 10:
           if not SAND_BOX_MODE:
             profit_report = 1
             message += "\n" + " - Near the support/resistance zone"
-        case 11:
+      if command == 11:
           profit_report = 1
           message += "\n" + " - MA5 < MA10 warning hold"
-        case 12:
+      if command == 12:
           profit_report = 1
           message += "\n" + " - Predict MACD < 0 should sell"
-        case 13:
+      if command == 13:
           profit_report = 1
           message += "\n" + " - MA5 > MA10 can hold"
-        case 14:
+      if command == 14:
           profit_report = 1
           message += "\n" + " - Predict MACD > 0 can hold"
-        case 15:
+      if command == 15:
           stoploss_setting = 1
           message += "\n" + " - Predict MACD > 0 can buy"
           message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
-        case 16:
+      if command == 16:
           stoploss_setting = 1
           message += "\n" + " - Short signal without hold"
           message += "\n" + " - Short at: {:.3f}".format(currentData["close"]*0.998)
           if (self.refPrice > currentData["close"]):
             message += " - {:.3f}".format(self.refPrice*0.998)
-        case 17:
+      if command == 17:
           stoploss_setting = 1
           message += "\n" + " - Predict MACD < 0 can short"
           message += "\n" + " - Can Short at: {:.2f}".format(currentData["close"]*0.998)

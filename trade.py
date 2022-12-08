@@ -533,8 +533,7 @@ class Trade:
   def trade_stock(self):
     self.balance = self.get_balance(self.stockName)
     for command in self.commands:
-      match command:
-        case 1: # Buy
+      if command == 1: # Buy
           # Check before buy
           try:
             # orders = exchange.fetch_open_orders(stock_name, None, None)
@@ -570,7 +569,7 @@ class Trade:
           #   send_message_telegram("Buy " + self.stockName + " did not done")
           #   raise Exception("Buy " + self.stockName + " did not done")
 
-        case 2: # Sell
+      if command == 2: # Sell
           try:
             orderCancel = exchange.cancel_all_orders(self.stockName)
             print ("Order Cancel:", orderCancel)

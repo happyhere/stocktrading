@@ -17,6 +17,7 @@ import plotly.graph_objects as go
 from scipy import stats, signal
 import numpy as np
 import argparse
+import requests
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 CACHE_PATH = DIR_PATH+'/cache'
@@ -210,8 +211,20 @@ class Trade:
     self.caculate_start_index()
     self.get_stock_indicators()
 
-  def get_historical_data(self):
-    """Get Historical data (ohlcv) from a coin_pair
+  def get_historical_data(self, limit=366):
+    """
+    Get Historical data (ohlcv) from a coin_pair by using url request
+    """
+    columns = ['timestamp','open', 'high', 'low', 'close', 'volume','close_time', 'qav','num_trades','taker_base_vol','taker_quote_vol', 'ignore']
+    url = f'https://api.binance.com/api/v3/klines?symbol={self.stockName.replace("/", "")}&interval={self.timeFrame}&limit={limit}' #&startTime={self.timeFrame}
+    data = pd.DataFrame(requests.get(url).json(), columns=columns, dtype=float)
+    data['timestamp'] = [datetime.datetime.fromtimestamp(float(time)/1000).strftime('%Y-%m-%dT%H:%M:%S.00Z') for time in data['timestamp']]
+    header = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+    self.stockData = data[header]
+    self.dataLength = len(self.stockData)
+
+  def get_historical_data_ccxt_version(self):
+    """Get Historical data (ohlcv) from a coin_pair by using ccxt
     """
     # optional: exchange.fetch_ohlcv(coin_pair, '1h', since)
     data = exchange.fetch_ohlcv(self.stockName, self.timeFrame, None, 366) #Null/None

@@ -354,12 +354,12 @@ class Trade:
 
         # Increase stoploss to protect balance
         if self.close[i] >= (2*self.buyPrice-self.stoplossPrice) and \
-            self.stoplossPrice != self.buyPrice and (len(self.commands) == 0 or self.commands[0] > 2):
+            self.stoplossPrice != self.buyPrice and (len(self.commands) == 0 or self.commands[0] > 3):
           self.commands.append(4)
           self.stoplossPrice = self.buyPrice
 
         # Buy if have a chance, buyPrice <-> close: ATR10
-        if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 2) and self.close[i]>((self.buyPrice - self.atr[i])):
+        if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 3) and self.close[i]>((self.buyPrice - self.atr[i])):
           self.stoplossPrice = self.buyPrice - self.atr[i] # If rebuy signal then down stoploss
           self.commands.append(5)
 

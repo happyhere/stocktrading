@@ -201,6 +201,7 @@ class Trade:
     self.buyPrice = 0
     self.hold = 0
     self.stoplossPrice = 0
+    self.stoplossTrigger = 0
     self.commands = []
     self.processIndex = 0
     self.message = ""
@@ -351,17 +352,18 @@ class Trade:
         if self.low[i] < self.stoplossPrice and self.stoplossPrice != 0 and len(self.commands) == 0 and self.close[i-1]>self.stoplossPrice:
           self.commands.append(3)
           # self.hold = 0
+          self.stoplossTrigger = self.stoplossPrice
 
         # Increase stoploss to protect balance
         if self.close[i] >= (2*self.buyPrice-self.stoplossPrice) and \
-            self.stoplossPrice != self.buyPrice and (len(self.commands) == 0 or self.commands[0] > 3):
+            self.stoplossPrice != self.buyPrice and (len(self.commands) == 0 or self.commands[0] > 2):
           self.commands.append(4)
           self.stoplossPrice = self.buyPrice
 
         # Buy if have a chance, buyPrice <-> close: ATR10
-        if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 3) and self.close[i]>((self.buyPrice - self.atr[i])):
-          self.stoplossPrice = self.buyPrice - self.atr[i] # If rebuy signal then down stoploss
+        if self.close[i] <= (self.buyPrice + self.atr[i]) and (len(self.commands) == 0 or self.commands[0] > 2) and self.close[i]>((self.buyPrice - self.atr[i])):
           self.commands.append(5)
+          self.stoplossPrice = self.buyPrice - self.atr[i] # If rebuy signal then change stoploss
 
       if self.hold == 1 or len(self.commands) > 0:
         # Cross RSI, MA1020, MA, -8.5% change
@@ -462,7 +464,7 @@ class Trade:
           message += " - {:.3f}".format(self.refPrice*0.998)
       if command == 3:
         profit_report = 1
-        message += "\n" + " - Stoploss reached at: {:.3f}".format(self.stoplossPrice)
+        message += "\n" + " - Stoploss reached at: {:.3f}".format(self.stoplossTrigger)
       if command == 4:
           profit_report = 1
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)

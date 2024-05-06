@@ -5,8 +5,8 @@ import pandas as pd
 import datetime
 import telegram
 # Scheduler
-# from apscheduler.schedulers.blocking import BlockingScheduler
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.blocking import BlockingScheduler
+# from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import utc,timezone
 #import asyncio
 import ccxt
@@ -44,19 +44,19 @@ if SAND_BOX_MODE:
   print ("SANDBOX MODE")
   NEXT_TIME_FILE = CACHE_PATH + "/NextTimeFile-Sandbox.txt"
   LOG_PATH = CACHE_PATH + "/trade-sandbox.log"
-  START_TRADE_TIME = datetime.datetime.now() #GMT+7 Current time
-  START_INDEX_TIME_DELTA = datetime.timedelta(hours = 7, minutes=120) #Zone compare & start point
-  TIME_PROTECT_DELTA = datetime.timedelta(hours = 7, minutes=60, seconds = 2) # Add 2s to prevent missing data for 1h interval 
+  START_TRADE_TIME = datetime.datetime.strptime("2023-03-30 15:33:00",'%Y-%m-%d %H:%M:%S') #GMT+7 Current time
+  START_INDEX_TIME_DELTA = datetime.timedelta(hours = 0, minutes=120) #Zone compare & start point
+  TIME_PROTECT_DELTA = datetime.timedelta(hours = 0, minutes=60, seconds = 2) # Add 2s to prevent missing data for 1h interval 
   TIME_INTERVAL_STR = '1h'
   TELEGRAM_API_ID = "5588630950:AAHXR7kcwpwdPVEvx2YwXUVeuQ_Qaz_wPNQ"
   TELEGRAM_CHANNEL_ID = "@telephaisinhtienao"
   ## Sandbox mode don't using old data file:
-  if os.path.isfile(NEXT_TIME_FILE):
-    os.remove(NEXT_TIME_FILE)
+  #if os.path.isfile(NEXT_TIME_FILE):
+  #  os.remove(NEXT_TIME_FILE)
   TIME_ZONE = timezone("Asia/Ho_Chi_Minh")
   # Scheduler for any plans
-  scheduler = BackgroundScheduler()
-  # scheduler = BlockingScheduler()
+  # scheduler = BackgroundScheduler()
+  scheduler = BlockingScheduler()
   # configure exchange
   # 'apiKey': 'yI3PFfXDUgaU2VulE4N2IIosGDtLyLEtkAookD6JHWba55G8itCwXwlZk2yrreC6',
   # 'secret': 'S1k5SbLkEc6XpQJOv5VBGFBY0srujicUGt0RxpLL0wswKeBseieUlTAAFjXYGb7D',
@@ -82,13 +82,13 @@ else:
   })
   
 if not SERVER_MODE:
-  TIME_UTC_DELTA = datetime.timedelta(hours = 0)
   # Dump print to log file
   OLD_STDOUT = sys.stdout
   LOG_FILE = open(LOG_PATH,"a")
   sys.stdout = LOG_FILE
+  TIME_UTC_DELTA = datetime.timedelta(hours = 0)
 else:
-  if SAND_BOX_MODE: ##TODO: Cheat: Run Sandbox in server meaning run in local with printting log
+  if SAND_BOX_MODE: ##TODO: Cheat: Run Sandbox in server meaning run sandbox in local with printting log
     TIME_UTC_DELTA = datetime.timedelta(hours = 0)
   else:
     TIME_UTC_DELTA = datetime.timedelta(hours = 7)
@@ -454,14 +454,14 @@ class Trade:
     for command in self.commands:
       if command == 1: # Buy: +0.2%
         stoploss_setting = 1
-        message += "\n" + " - Buy at: {:.3f}".format(self.refPrice*1.002)
+        message += "\n" + " - Buy at: {:.3f}".format(self.refPrice)
         if (self.refPrice < self.buyPrice):
-          message += " - {:.3f}".format(self.buyPrice*1.002)
+          message += " - {:.3f}".format(self.buyPrice)
       if command == 2: # Sell: 0.4~0.5%
         profit_report = 1
-        message += "\n" + " - Sell at: {:.3f}".format(currentData["close"]*0.998)
+        message += "\n" + " - Sell at: {:.3f}".format(currentData["close"])
         if (self.refPrice > currentData["close"]):
-          message += " - {:.3f}".format(self.refPrice*0.998)
+          message += " - {:.3f}".format(self.refPrice)
       if command == 3:
         profit_report = 1
         message += "\n" + " - Stoploss reached at: {:.3f}".format(self.stoplossTrigger)
@@ -470,9 +470,9 @@ class Trade:
           message += "\n" + " - Stoploss should be at: " + "{:.3f}".format(self.buyPrice)
       if command == 5: # Buy: +0.2%
           stoploss_setting = 1
-          message += "\n" + " - Rebuy at: {:.3f}".format(self.refPrice*1.002)
+          message += "\n" + " - Rebuy at: {:.3f}".format(self.refPrice)
           if (self.refPrice < self.buyPrice):
-            message += " - {:.3f}".format(self.buyPrice*1.002)
+            message += " - {:.3f}".format(self.buyPrice)
       if command == 6:
           profit_report = 1
           if self.rsi[self.processIndex-1] > 70:
@@ -513,21 +513,21 @@ class Trade:
       if command == 15:
           stoploss_setting = 1
           message += "\n" + " - Predict MACD > 0 can buy"
-          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
+          message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice)
           if (self.refPrice < self.buyPrice):
-            message += " - {:.3f}".format(self.buyPrice*1.002)
+            message += " - {:.3f}".format(self.buyPrice)
       if command == 16:
           stoploss_setting = 1
           message += "\n" + " - Short signal without hold"
-          message += "\n" + " - Short at: {:.3f}".format(currentData["close"]*0.998)
+          message += "\n" + " - Short at: {:.3f}".format(currentData["close"])
           if (self.refPrice > currentData["close"]):
-            message += " - {:.3f}".format(self.refPrice*0.998)
+            message += " - {:.3f}".format(self.refPrice)
       if command == 17:
           stoploss_setting = 1
           message += "\n" + " - Predict MACD < 0 can short"
-          message += "\n" + " - Can Short at: {:.2f}".format(currentData["close"]*0.998)
+          message += "\n" + " - Can Short at: {:.2f}".format(currentData["close"])
           if (self.refPrice > currentData["close"]):
-            message += " - {:.3f}".format(self.refPrice*0.998)
+            message += " - {:.3f}".format(self.refPrice)
     
     if (stoploss_setting == 1):
       message += "\n" + " - Stoploss at : {:.3f} {:.2f}%".format(self.stoplossPrice, ((self.stoplossPrice/self.buyPrice)-1)*100); # Stoploss ATR
@@ -675,6 +675,12 @@ class Trade:
     return volumePeaks
 
 def schedule_analysis_stock():
+  if not SERVER_MODE:
+    # Dump print to log file
+    OLD_STDOUT = sys.stdout
+    LOG_FILE = open(LOG_PATH,"a")
+    sys.stdout = LOG_FILE
+  
   currentTime = datetime.datetime.now()+ TIME_UTC_DELTA
   print("------ Day:", currentTime, "------")
   stockList = read_stock_list()
@@ -682,7 +688,7 @@ def schedule_analysis_stock():
   nextTimeStamp = read_next_time_stamp()
   if currentTime >= nextTimeStamp:
     try:
-      send_message_telegram("------- Day: " + currentTime.strftime("%d, %b %Y") + " -------")
+      send_message_telegram("------- Day: " + currentTime.strftime("%d, %H:%M:%S") + " -------")
       for stockName in stockList:
         if stockName != "BTC/USDT" and SAND_BOX_MODE:
           continue
@@ -699,13 +705,18 @@ def schedule_analysis_stock():
       nextTimeStamp = convert_string_to_date(stockTrade.stockData.iloc[-1]["timestamp"]) + TIME_PROTECT_DELTA
       write_next_time_stamp(nextTimeStamp)
       print ("------ EOD:", currentTime, "------")
-      send_message_telegram("------- EOD: " + currentTime.strftime("%d, %b %Y") + " -------")
+      send_message_telegram("------- EOD: " + currentTime.strftime("%d, %H:%M:%S") + " -------")
     except Exception as ex:
       print("Something wrong: ", ex)
       send_message_telegram("Something wrong: " + str(ex))
       # scheduler.shutdown()
   else:
     print("Please run again after 7am, next time is", nextTimeStamp)
+    
+  if not SERVER_MODE:
+    # Program ended, turn off sys log file mode
+    sys.stdout = OLD_STDOUT
+    LOG_FILE.close()
 
 if __name__ == "__main__":
   try:
@@ -713,7 +724,7 @@ if __name__ == "__main__":
     schedule_analysis_stock()
     if SAND_BOX_MODE:
       # scheduler.add_job(schedule_analysis_stock, 'interval', minutes=60, timezone=TIME_ZONE) # Recommend run at: 05s of each minute
-      scheduler.add_job(schedule_analysis_stock, 'cron', minute="01", second="00", timezone=TIME_ZONE)  # run on every hour at hh:01:00
+      scheduler.add_job(schedule_analysis_stock, 'cron', minute="00", second="15", timezone=TIME_ZONE)  # run on every hour at hh:01:00
       # scheduler.start()
       
       try:
@@ -722,11 +733,6 @@ if __name__ == "__main__":
             time.sleep(10)
       except (KeyboardInterrupt, SystemExit):
           pass
-   
-    if not SERVER_MODE:
-      # Program ended, turn off sys log file mode
-      sys.stdout = OLD_STDOUT
-      LOG_FILE.close()
 
   except Exception as ex:
     print("Program Exception: Is it related Telegram?", ex)

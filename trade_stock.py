@@ -5,8 +5,8 @@ import pandas as pd
 import datetime
 import telegram
 # Scheduler
-# from apscheduler.schedulers.blocking import BlockingScheduler
-# from pytz import utc,timezone
+from apscheduler.schedulers.blocking import BlockingScheduler
+from pytz import utc,timezone
 import requests
 from user import USER_AGENTS
 from pandas import json_normalize
@@ -40,7 +40,7 @@ SERVER_MODE = args.server_mode # Heroku Server: GMT +0, print log
 HISTORICAL_MODE = args.historical_mode
 TELEGRAM_API_ID = "5030826661:AAH-C7ZGJexK3SkXIqM8CyDgieoR6ZFnXq8"
 TELEGRAM_CHANNEL_ID = "@botmuabanchungkhoan"
-# TIME_ZONE = timezone("Asia/Ho_Chi_Minh")
+TIME_ZONE = timezone("Asia/Ho_Chi_Minh")
 STOCK_FILE = DIR_PATH+"/Database/ToTheMoon.tls"
 
 NEXT_TIME_FILE = CACHE_PATH + "/NextTimeFile-Stock.txt"
@@ -51,11 +51,11 @@ TIME_DURATION_DELTA = datetime.timedelta(days = 366)
 TIME_PROTECT_DELTA = datetime.timedelta(hours = 15, minutes= 10) # Add 15 hours 10 minutes to prevent missing data for 1 day interval 
 
 if not SERVER_MODE:
-  TIME_UTC_DELTA = datetime.timedelta(hours = 0)
   # Dump print to log file
   old_stdout = sys.stdout
   LOG_FILE = open(LOG_PATH,"a")
   sys.stdout = LOG_FILE
+  TIME_UTC_DELTA = datetime.timedelta(hours = 0)
 else:
   TIME_UTC_DELTA = datetime.timedelta(hours = 7)
 
@@ -70,7 +70,7 @@ else:
   START_TRADE_TIME = START_TRADE_TIME_ORIGINAL
 
 # # Scheduler for any plans
-# scheduler = BlockingScheduler()
+scheduler = BlockingScheduler()
 
 ### https://github.com/thinh-vu/vnstock/blob/main/vnstock/stock.py
 def stock_historical_data (symbol, start_date, end_date):
@@ -195,7 +195,11 @@ if not SERVER_MODE:
   def read_next_time_stamp():
     try:
       with open(NEXT_TIME_FILE, "r") as file:
-          return datetime.datetime.strptime(file.read(),'%d-%m-%Y')
+          time_str = file.read()
+          if time_str.endswith('\n'):
+            # Remove the last character (newline character)
+            time_str = time_str[:-1]
+          return datetime.datetime.strptime(time_str,'%d-%m-%Y')
     except IOError:
       return START_TRADE_TIME
 else:
@@ -455,6 +459,11 @@ class Trade:
         if nextMacdHistogram < 0 and self.macdHistogram[i] >= 0: # Warning next downtrend
           self.commands.append(12)
 
+      currentTime = datetime.datetime.now()+ TIME_UTC_DELTA
+      if (currentTime < convert_to_datetime(self.stockData.iloc[i]) + TIME_PROTECT_DELTA): # skip current running time in session 
+        print("------ Break:", currentTime, convert_to_datetime(self.stockData.iloc[i]), "------")
+        break
+
       if (self.nextTimeStamp - TIME_INTERVAL_DELTA) < convert_to_datetime(self.stockData.iloc[i]):
         print ("Processing: ", self.stockName, i, convert_to_datetime(self.stockData.iloc[i]))
         # Push to telegram
@@ -608,6 +617,12 @@ class Trade:
     return volumePeaks
 
 def schedule_analysis_stock():
+  if not SERVER_MODE:
+    # Dump print to log file
+    old_stdout = sys.stdout
+    LOG_FILE = open(LOG_PATH,"a")
+    sys.stdout = LOG_FILE
+  
   currentTime = datetime.datetime.now()+ TIME_UTC_DELTA
   print("------ Day:", currentTime, "------")
   stockList = read_stock_list()
@@ -617,13 +632,18 @@ def schedule_analysis_stock():
     try:
       send_message_telegram("------- Day: " + currentTime.strftime("%d, %b %Y") + " -------")
       for stockName in stockList:
-        # print("Pair: " + stockName)
+        #print("Pair: " + stockName)
         stockTrade = Trade(stockName, currentTime, nextTimeStamp)
         stockTrade.analysis_stock()
 
       lastTimeStamp = convert_to_datetime(stockTrade.stockData.iloc[-1])
+      if (currentTime < lastTimeStamp + TIME_PROTECT_DELTA): # skip current running time in session 
+        print("------ Skip:", currentTime, lastTimeStamp, "------")
+        lastTimeStamp = lastTimeStamp - TIME_INTERVAL_DELTA
       if lastTimeStamp.weekday() == 4: # Friday and next time is Monday
         nextTimeStamp = lastTimeStamp + 3*TIME_INTERVAL_DELTA
+      elif lastTimeStamp.weekday() == 5: # Saturday and next time is Monday
+        nextTimeStamp = lastTimeStamp + 2*TIME_INTERVAL_DELTA
       else:
         nextTimeStamp = lastTimeStamp + TIME_INTERVAL_DELTA
       write_next_time_stamp(nextTimeStamp)
@@ -636,16 +656,23 @@ def schedule_analysis_stock():
       # scheduler.shutdown()
   else:
     print("Please run again after 15pm, next time is", nextTimeStamp+TIME_PROTECT_DELTA)
+    
+  if not SERVER_MODE:
+    # Program ended, turn off sys log file mode
+    sys.stdout = old_stdout
+    LOG_FILE.close()
 
 if __name__ == "__main__":
   try:
     # Run first time if needed
     schedule_analysis_stock()
-
-    if not SERVER_MODE:
-      # Program ended, turn off sys log file mode
-      sys.stdout = old_stdout
-      LOG_FILE.close()
+    
+    # Windows sleep this task so using Window Task Schedule
+    scheduler.add_job(schedule_analysis_stock, 'cron', day_of_week="mon-fri", hour="16", minute="00", timezone=TIME_ZONE, misfire_grace_time=None)  # run on Monday to Friday at 15h30
+    try:
+      scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+      pass
 
   except Exception as ex:
     print("Program Exception: Is it related Telegram?", ex)
@@ -653,11 +680,4 @@ if __name__ == "__main__":
       # Program ended, turn off sys log file mode
       sys.stdout = old_stdout
       LOG_FILE.close()
-
-  # Windows sleep this task so using Window Task Schedule
-  # scheduler.add_job(schedule_analysis_stock, 'cron', day_of_week="mon-fri", hour="20", minute="00", timezone=TIME_ZONE, misfire_grace_time=None)  # run on Monday to Friday at 15h30
-  # try:
-  #     scheduler.start()
-  # except (KeyboardInterrupt, SystemExit):
-  #     pass
   

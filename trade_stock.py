@@ -18,6 +18,9 @@ import plotly.graph_objects as go
 from scipy import stats, signal
 import numpy as np
 import argparse
+#SSI
+from ssi_fc_data import fc_md_client , model
+import config
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 CACHE_PATH = DIR_PATH+'/cache'
@@ -49,6 +52,9 @@ START_TRADE_TIME_ORIGINAL = datetime.datetime.strptime("2022-04-01",'%Y-%m-%d') 
 TIME_INTERVAL_DELTA = datetime.timedelta(days = 1) # Write next time search
 TIME_DURATION_DELTA = datetime.timedelta(days = 366)
 TIME_PROTECT_DELTA = datetime.timedelta(hours = 15, minutes= 10) # Add 15 hours 10 minutes to prevent missing data for 1 day interval 
+
+# if args.historical_mode == "SSI"
+client = fc_md_client.MarketDataClient(config)
 
 if not SERVER_MODE:
   # Dump print to log file
@@ -106,7 +112,7 @@ KEYS = ['date', 'adOpen',
 
 def getStockHistory(code, start_date, end_date):
     try:
-        URL = 'https://finfo-api.vndirect.com.vn/v4/stock_prices?sort=date&q=code:%s~date:gte:%s~date:lte:%s&size=100000'
+        URL = 'https://api-finfo.vndirect.com.vn/v4/stock_prices?sort=date&q=code:%s~date:gte:%s~date:lte:%s&size=100000'
         r = requests.get(URL % (code, start_date, end_date),
                          headers={"USER-AGENT": USER_AGENTS[random.randint(0, len(USER_AGENTS)-1)]})
         res = r.json()
@@ -122,38 +128,31 @@ def getStockHistory(code, start_date, end_date):
     return []
 
 ## STOCK TRADING HISTORICAL DATA
-def getStockHistoryV2(code,start_date,end_date):
-    start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-    end_time = int(end_date.timestamp())
-    start_time = int(start_date.timestamp())
+def getStockHistoryV2(code, start_date, end_date, page=1, size=365, adjust=True):
     try:
-        URL_SSI = "https://iboard.ssi.com.vn/dchart/api/history?resolution=D&symbol=%s&from=%s&to=%s" 
-        r = requests.get(URL_SSI % (code, start_time, end_time),
-                         headers={"USER-AGENT": USER_AGENTS[random.randint(0, len(USER_AGENTS)-1)]})
-        res = r.json()
+        request_model = model.daily_ohlc(code.lower(), start_date, end_date, page, size, adjust)
+        res = client.daily_ohlc(config, request_model)
     except Exception as e:
         return []
-    result = dict()
-    # oriHeader = ['t', 'o', 'h', 'l', 'c', 'v']
-    # header = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
-    for k,v in res.copy().items():
-        if isinstance(v, list):
-            v.reverse()
-            result[k] = v
-    df =  pd.DataFrame.from_dict(result) 
-    df.rename(columns={'t': 'timestamp', 'o': 'open', 'h': 'high', 'l': 'low', 'c': 'close', 'v': 'volume'}, inplace=True)
-    # print(convert_timestamp_to_date(df["Timestamp"][0]))
-    # df["Timestamp"]=pd.to_pydatetime(df["Timestamp"])
-    # df["Timestamp"]=df["Timestamp"].dt.strftime("%Y-%m-%d")
-    df['timestamp'] = df['timestamp'].apply(lambda x: convert_date_to_string(convert_timestamp_to_date(x)))
-    df['open'] = df['open'].apply(lambda x: float(x))
-    df['high'] = df['high'].apply(lambda x: float(x))
-    df['low'] = df['low'].apply(lambda x: float(x))
-    df['close'] = df['close'].apply(lambda x: float(x))
-    df['volume'] = df['volume'].apply(lambda x: float(x))
-    # print(df)
-    return df
+
+    if 'data' in res and len(res['data']) > 0:
+        KEYS = ['Symbol', 'TradingDate', 'Open', 'High', 'Low', 'Close', 'Volume']
+        def DICT_FILTER(d, keys): return {k: d[k] for k in keys if k in d}
+
+        filtered_data = list(map(lambda x: DICT_FILTER(x, KEYS), res['data']))
+        filtered_data.reverse()
+        df = pd.DataFrame(filtered_data)
+        df.rename(columns={
+            'TradingDate': 'timestamp',
+            'Open': 'open',
+            'High': 'high',
+            'Low': 'low',
+            'Close': 'close',
+            'Volume': 'volume'
+        }, inplace=True)
+        return df
+
+    return res, pd.DataFrame()
 
 def convert_timestamp_to_date(timeStampStr):
   return datetime.datetime.fromtimestamp(int(timeStampStr))
@@ -272,7 +271,7 @@ class Trade:
     MAXIMUM_RETRY = 5 # Retry maxium 5 times if getting data failure
     retryCount = 0
     while(retryCount < MAXIMUM_RETRY): 
-      stockData = getStockHistory(self.stockName, convert_date_to_string(self.currentTime-TIME_DURATION_DELTA), 
+      stockData = getStockHistoryV2(self.stockName, convert_date_to_string(self.currentTime-TIME_DURATION_DELTA), 
                                   convert_date_to_string(self.currentTime))
       if any("close" in s for s in stockData):
         break

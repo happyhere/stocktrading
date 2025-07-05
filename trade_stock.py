@@ -131,7 +131,8 @@ def getStockHistory(code, start_date, end_date):
 def getStockHistoryV2(code, start_date, end_date, page=1, size=365, adjust=True):
     try:
         request_model = model.daily_ohlc(code.lower(), start_date, end_date, page, size, adjust)
-        res = client.daily_ohlc(config, request_model)
+        r = client.daily_ohlc(config, request_model)
+        res = r.json()
     except Exception as e:
         return []
 
@@ -162,6 +163,9 @@ def convert_to_datetime(stockData):
 
 def convert_date_to_string(dateTime):
   return dateTime.strftime('%Y-%m-%d')
+
+def convert_date_to_string_v2(dateTime):
+  return dateTime.strftime('%d/%m/%Y')
 
 def send_message_telegram(message):
   for index in range(1,3):
@@ -271,8 +275,8 @@ class Trade:
     MAXIMUM_RETRY = 5 # Retry maxium 5 times if getting data failure
     retryCount = 0
     while(retryCount < MAXIMUM_RETRY): 
-      stockData = getStockHistoryV2(self.stockName, convert_date_to_string(self.currentTime-TIME_DURATION_DELTA), 
-                                  convert_date_to_string(self.currentTime))
+      stockData = getStockHistoryV2(self.stockName, convert_date_to_string_v2(self.currentTime-TIME_DURATION_DELTA), 
+                                  convert_date_to_string_v2(self.currentTime))
       if any("close" in s for s in stockData):
         break
       else: # not stockData
@@ -473,7 +477,7 @@ class Trade:
       elif i == (self.dataLength-1) and (self.nextTimeStamp - TIME_INTERVAL_DELTA) >= convert_to_datetime(self.stockData.iloc[i]):
         # Time is comming but no stock data fitting
         raise Exception("Check the system, " + self.stockName + " does not have target data, last: " + 
-          convert_date_to_string(convert_to_datetime(self.stockData.iloc[i])))
+          convert_date_to_string_v2(convert_to_datetime(self.stockData.iloc[i])))
 
   # Prepare message to send anywhere
   def prepare_message(self):

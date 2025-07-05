@@ -1,5 +1,5 @@
 import sys
-import os 
+import os
 import time
 import pandas as pd
 import datetime
@@ -27,7 +27,7 @@ CACHE_PATH = DIR_PATH+'/cache'
 # Check whether the specified path exists or not
 isExist = os.path.exists(CACHE_PATH)
 if not isExist:
-  # Create a new directory because it does not exist 
+  # Create a new directory because it does not exist
   os.makedirs(CACHE_PATH)
 
 parser = argparse.ArgumentParser()
@@ -50,11 +50,8 @@ NEXT_TIME_FILE = CACHE_PATH + "/NextTimeFile-Stock.txt"
 LOG_PATH = CACHE_PATH + "/trade_stock.log"
 START_TRADE_TIME_ORIGINAL = datetime.datetime.strptime("2022-04-01",'%Y-%m-%d') #GMT+7 Trade time count if day > 15h else day -= 1
 TIME_INTERVAL_DELTA = datetime.timedelta(days = 1) # Write next time search
-TIME_DURATION_DELTA = datetime.timedelta(days = 366)
-TIME_PROTECT_DELTA = datetime.timedelta(hours = 15, minutes= 10) # Add 15 hours 10 minutes to prevent missing data for 1 day interval 
-
-# if args.historical_mode == "SSI"
-client = fc_md_client.MarketDataClient(config)
+TIME_DURATION_DELTA = datetime.timedelta(days = 365)
+TIME_PROTECT_DELTA = datetime.timedelta(hours = 15, minutes= 10) # Add 15 hours 10 minutes to prevent missing data for 1 day interval
 
 if not SERVER_MODE:
   # Dump print to log file
@@ -75,6 +72,9 @@ elif START_TRADE_TIME_ORIGINAL.weekday() == 6:
 else:
   START_TRADE_TIME = START_TRADE_TIME_ORIGINAL
 
+###SSI
+client = fc_md_client.MarketDataClient(config)
+
 # # Scheduler for any plans
 scheduler = BlockingScheduler()
 
@@ -93,7 +93,7 @@ def stock_historical_data (symbol, start_date, end_date):
         | YYYY-mm-dd  | xxxx | xxxx | xxx | xxxxx | xxxxxx |
     Raises:
         ValueError: raised whenever any of the introduced arguments is not valid.
-    """ 
+    """
     fd = int(time.mktime(time.strptime(start_date, "%Y-%m-%d")))
     td = int(time.mktime(time.strptime(end_date, "%Y-%m-%d")))
     data = requests.get('https://apipubaws.tcbs.com.vn/stock-insight/v1/stock/bars-long-term?ticker={}&type=stock&resolution=D&from={}&to={}'.format(symbol, fd, td)).json()
@@ -121,18 +121,16 @@ def getStockHistory(code, start_date, end_date):
     if 'data' in res and len(res['data']) > 0:
         res = list(map(lambda x: DICT_FILTER(x, KEYS), res['data']))
         res.reverse()
-        df =  pd.DataFrame(res) 
+        df =  pd.DataFrame(res)
         df.rename(columns={'date': 'timestamp', 'adOpen': 'open', 'adHigh': 'high', 'adLow': 'low', 'adClose': 'close', 'nmVolume': 'volume'}, inplace=True)
         # print(df)
         return df
     return []
 
 ## STOCK TRADING HISTORICAL DATA
-def getStockHistoryV2(code, start_date, end_date, page=1, size=365, adjust=True):
+def getStockHistoryV2(code, start_date, end_date, page=1, size=100, adjust=False):
     try:
-        request_model = model.daily_ohlc(code.lower(), start_date, end_date, page, size, adjust)
-        r = client.daily_ohlc(config, request_model)
-        res = r.json()
+        res = client.daily_ohlc(config, model.daily_ohlc(code.lower(), start_date, end_date, 1, 100, False))
     except Exception as e:
         return []
 
@@ -151,6 +149,8 @@ def getStockHistoryV2(code, start_date, end_date, page=1, size=365, adjust=True)
             'Close': 'close',
             'Volume': 'volume'
         }, inplace=True)
+        columns_to_fix = ['open', 'high', 'low', 'close', 'volume']
+        df[columns_to_fix] = df[columns_to_fix].apply(pd.to_numeric, errors='coerce')
         return df
 
     return res, pd.DataFrame()
@@ -159,12 +159,9 @@ def convert_timestamp_to_date(timeStampStr):
   return datetime.datetime.fromtimestamp(int(timeStampStr))
 
 def convert_to_datetime(stockData):
-  return datetime.datetime.strptime(stockData["timestamp"],'%Y-%m-%d')
+  return datetime.datetime.strptime(stockData["timestamp"],'%d/%m/%Y')
 
 def convert_date_to_string(dateTime):
-  return dateTime.strftime('%Y-%m-%d')
-
-def convert_date_to_string_v2(dateTime):
   return dateTime.strftime('%d/%m/%Y')
 
 def send_message_telegram(message):
@@ -274,9 +271,9 @@ class Trade:
   def verify_stock_data(self): # Check getting from VN Direct
     MAXIMUM_RETRY = 5 # Retry maxium 5 times if getting data failure
     retryCount = 0
-    while(retryCount < MAXIMUM_RETRY): 
-      stockData = getStockHistoryV2(self.stockName, convert_date_to_string_v2(self.currentTime-TIME_DURATION_DELTA), 
-                                  convert_date_to_string_v2(self.currentTime))
+    while(retryCount < MAXIMUM_RETRY):
+      stockData = getStockHistoryV2(self.stockName, convert_date_to_string(self.currentTime-TIME_DURATION_DELTA),
+                                  convert_date_to_string(self.currentTime))
       if any("close" in s for s in stockData):
         break
       else: # not stockData
@@ -385,7 +382,7 @@ class Trade:
               self.refPrice = refPrice
             self.stoplossPrice = self.buyPrice - self.atr[i] # Stoploss based ATR(10)
 
-      if self.hold == 1: 
+      if self.hold == 1:
         # Stoploss warning trigger your balance
         if self.low[i] < self.stoplossPrice and self.stoplossPrice != 0 and len(self.commands) == 0 and self.close[i-1]>self.stoplossPrice:
           self.commands.append(3)
@@ -448,7 +445,7 @@ class Trade:
 
         if self.candlestickUp != "" or self.candlestickDown != "":
           self.commands.append(9)
-        
+
         if len(self.volumeProfiles) > 0:
           for key in self.volumeProfiles:
             diff = abs(self.close[i]-key)/self.close[i]
@@ -458,12 +455,12 @@ class Trade:
 
         if self.ma5[i] < self.ma10[i]: #Downtrend warning
           self.commands.append(11)
- 
+
         if nextMacdHistogram < 0 and self.macdHistogram[i] >= 0: # Warning next downtrend
           self.commands.append(12)
 
       currentTime = datetime.datetime.now()+ TIME_UTC_DELTA
-      if (currentTime < convert_to_datetime(self.stockData.iloc[i]) + TIME_PROTECT_DELTA): # skip current running time in session 
+      if (currentTime < convert_to_datetime(self.stockData.iloc[i]) + TIME_PROTECT_DELTA): # skip current running time in session
         print("------ Break:", currentTime, convert_to_datetime(self.stockData.iloc[i]), "------")
         break
 
@@ -476,8 +473,8 @@ class Trade:
           send_message_telegram(self.message)
       elif i == (self.dataLength-1) and (self.nextTimeStamp - TIME_INTERVAL_DELTA) >= convert_to_datetime(self.stockData.iloc[i]):
         # Time is comming but no stock data fitting
-        raise Exception("Check the system, " + self.stockName + " does not have target data, last: " + 
-          convert_date_to_string_v2(convert_to_datetime(self.stockData.iloc[i])))
+        raise Exception("Check the system, " + self.stockName + " does not have target data, last: " +
+          convert_date_to_string(convert_to_datetime(self.stockData.iloc[i])))
 
   # Prepare message to send anywhere
   def prepare_message(self):
@@ -550,7 +547,7 @@ class Trade:
           message += "\n" + " - Can Buy at: {:.3f}".format(self.refPrice*1.002)
           if (self.refPrice < self.buyPrice):
             message += " - {:.3f}".format(self.buyPrice*1.002)
-    
+
     if (stoploss_setting == 1):
       message += "\n" + " - Stoploss at : {:.3f} {:.2f}%".format(self.stoplossPrice, ((self.stoplossPrice/self.buyPrice)-1)*100); # Stoploss ATR
     if (profit_report == 1 and stoploss_setting == 0):
@@ -568,7 +565,7 @@ class Trade:
 
   def get_dist_plot(self, kx, ky):
     fig = go.Figure()
-    fig.add_trace(go.Histogram(name='Vol Profile', x=self.close, y=self.volume, nbinsx=150, 
+    fig.add_trace(go.Histogram(name='Vol Profile', x=self.close, y=self.volume, nbinsx=150,
                               histfunc='sum', histnorm='probability density',
                               marker_color='#B0C4DE'))
     fig.add_trace(go.Scatter(name='KDE', x=kx, y=ky, mode='lines', marker_color='#D2691E'))
@@ -592,7 +589,7 @@ class Trade:
     # pocIndex = -1
     for i in range(0, len(peaks)):
       volumePeaks[xr[peaks[i]]] = kdy[peaks[i]]
-      
+
     sortedVolumePeaks = dict(sorted(volumePeaks.items(), key=lambda item: item[1]))
     reverseVolumePeaks = dict(reversed(sortedVolumePeaks.items()))
 
@@ -625,7 +622,7 @@ def schedule_analysis_stock():
     old_stdout = sys.stdout
     LOG_FILE = open(LOG_PATH,"a")
     sys.stdout = LOG_FILE
-  
+
   currentTime = datetime.datetime.now()+ TIME_UTC_DELTA
   print("------ Day:", currentTime, "------")
   stockList = read_stock_list()
@@ -640,7 +637,7 @@ def schedule_analysis_stock():
         stockTrade.analysis_stock()
 
       lastTimeStamp = convert_to_datetime(stockTrade.stockData.iloc[-1])
-      if (currentTime < lastTimeStamp + TIME_PROTECT_DELTA): # skip current running time in session 
+      if (currentTime < lastTimeStamp + TIME_PROTECT_DELTA): # skip current running time in session
         print("------ Skip:", currentTime, lastTimeStamp, "------")
         lastTimeStamp = lastTimeStamp - TIME_INTERVAL_DELTA
       if lastTimeStamp.weekday() == 4: # Friday and next time is Monday
@@ -659,7 +656,7 @@ def schedule_analysis_stock():
       # scheduler.shutdown()
   else:
     print("Please run again after 15pm, next time is", nextTimeStamp+TIME_PROTECT_DELTA)
-    
+
   if not SERVER_MODE:
     # Program ended, turn off sys log file mode
     sys.stdout = old_stdout
@@ -669,7 +666,7 @@ if __name__ == "__main__":
   try:
     # Run first time if needed
     schedule_analysis_stock()
-    
+
     # Windows sleep this task so using Window Task Schedule
     scheduler.add_job(schedule_analysis_stock, 'cron', day_of_week="mon-fri", hour="16", minute="00", timezone=TIME_ZONE, misfire_grace_time=None)  # run on Monday to Friday at 15h30
     try:
@@ -683,4 +680,3 @@ if __name__ == "__main__":
       # Program ended, turn off sys log file mode
       sys.stdout = old_stdout
       LOG_FILE.close()
-  
